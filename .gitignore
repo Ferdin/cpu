@@ -1,0 +1,18 @@
+# Compiled files
+bin/
+*.class
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Secrets / config
+*.env
+config.properties
+application.properties
+secrets.properties
