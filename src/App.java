@@ -10,156 +10,188 @@ public class App {
 
     boolean zeroFlag = false;
     boolean negativeFlag = false;
+    boolean carryFlag = false;
 
     public void run(){
         while(true){
             int instruction = memory[programCounter];
             programCounter++;
 
-            if(instruction == 0) {
-                System.out.println("Program finished!");
-                break;
-            }
-            else if(instruction == 1){
-                int number = memory[programCounter];
-                programCounter++;
-                A = number;
-                updateFlags(A);
-                System.out.println("LDA: Loaded " + number + " into A.");
-            }
-            else if(instruction == 2) {
-                A = A + X;
-                if(A > 255) A = A - 256;
-                updateFlags(A);
-                System.out.println("ADC: Added X to A. A is now " + A);
-            }
-            else if(instruction == 3) {
-                int number = memory[programCounter];
-                programCounter++;
-                X = number;
-                updateFlags(X);
-                System.out.println("LDX: Loaded " + number + " into X.");
-            }
-            else if(instruction == 4) {
-                int number = memory[programCounter];
-                programCounter++;
-                Y = number;
-                updateFlags(Y);
-                System.out.println("LDY: Loaded " + number + " into Y.");
-            }
-            else if(instruction == 5) {
-                int address = memory[programCounter];
-                programCounter++;
-                memory[address] = A;
-                System.out.println("STA: Stored A (" + A + ") to memory[" + address + "]");
-               
-            }
-            else if(instruction == 6) {
-                int address = memory[programCounter];
-                programCounter++;
-                A = memory[address];
-                updateFlags(A);
-                System.out.println("LDA (from memory): Loaded \" + A + \" from memory[\" + address + \"]");
-            }
-            else if(instruction == 7) {
-                X = A;
-                updateFlags(X);
-                System.out.println("TAX: Transferred A to X. X is now " + X);
-            }
-            else if(instruction == 8) {
-                A = X;
-                updateFlags(A);
-                System.out.println("TXA: Transferred X to A. A is now " + A);
-            }
-            else if(instruction == 9) {
-                X = X + 1;
-                if (X > 255) X = 0; // Wrap around
-                updateFlags(X);
-                System.out.println("INX: Incremented X. X is now " + X);
-            }
-            else if(instruction == 10) {
-                Y = Y + 1;
-                if (Y > 255) Y = 0; // Wrap around
-                updateFlags(Y);
-                System.out.println("INY: Incremented Y. Y is now " + X);
-            }
-            else if(instruction == 11) {
-                X = X - 1;
-                if( X < 0) X = 255;
-                updateFlags(X);
-                System.out.println("DEX: Decremented X. X is now" + Y);
-            }
-            else if(instruction == 12)  {
-                int number = memory[programCounter];
-                programCounter++; // Move past the data
-                int result = A - number;
-                updateFlags(result);
-                System.out.println("CMP: Compared A (" + A + ") with " + number);
-                System.out.println("     Zero flag: " + zeroFlag + ", Negative flag: " + negativeFlag);
-            }
-            else if (instruction == 13) {
-                // 13 = Branch if Zero flag is set
-                int offset = memory[programCounter];
-                programCounter++; // Move past the offset
-                if (zeroFlag) {
-                    programCounter = offset;
-                    System.out.println("BEQ: Zero flag is set! Jumping to position " + offset);
-                } else {
-                    System.out.println("BEQ: Zero flag is not set. Continue normally.");
+            switch(instruction){
+                case 0:
+                    System.out.println("Program finished!");
+                    return;
+                case 1: {
+                    int number = memory[programCounter];
+                    programCounter++;
+                    A = number;
+                    updateZeroAndNegativeFlags(A);
+                    System.out.println("LDA: Loaded " + number + " into A.");
+                    break;
                 }
-                
-            } 
-            else if (instruction == 14) {
-                // 14 = Branch if Zero flag is NOT set
-                int offset = memory[programCounter];
-                programCounter++; // Move past the offset
-                if (!zeroFlag) {
-                    programCounter = offset;
-                    System.out.println("BNE: Zero flag is not set! Jumping to position " + offset);
-                } else {
-                    System.out.println("BNE: Zero flag is set. Continue normally.");
+                case 2: {
+                    A = A + X;
+                    if(A > 255) A = A - 256;
+                    updateZeroAndNegativeFlags(A);
+                    System.out.println("ADC: Added X to A. A is now " + A);
+                    break;
                 }
-                
-            }
-            else if (instruction == 15) {
-                // 15 = CPX - Compare X with a number
-                int number = memory[programCounter];
-                programCounter++;
-                int result = X - number;
-                updateFlags(result);
-                System.out.println("CPX: Compared X(" + X + ") with " + number);
-                System.out.println("Zero flag: " + zeroFlag + ", Negative flag: " + negativeFlag);
-            } 
-            else if (instruction == 16){
-                // 16 = CPY - Compare Y with a number
-                int number = memory[programCounter];
-                programCounter++;
-                int result = Y - number;
-                updateFlags(result);
-                System.out.println("CPY: Compared Y (" + Y + ") with " + number);
-                System.out.println("     Zero flag: " + zeroFlag + ", Negative flag: " + negativeFlag);
-
-            }
-            else {
-                System.out.println("Unknown instruction: " + instruction);
-                break;
+                // Other cases handled below for clarity
+                case 3: {
+                    int number = memory[programCounter];
+                    programCounter++;
+                    X = number;
+                    updateZeroAndNegativeFlags(X);
+                    System.out.println("LDX: Loaded " + number + " into X.");
+                    break;
+                }
+                case 4: {
+                    int number = memory[programCounter];
+                    programCounter++;
+                    Y = number;
+                    updateZeroAndNegativeFlags(Y);
+                    System.out.println("LDY: Loaded " + number + " into Y.");
+                    break;
+                }
+                case 5: {
+                    int address = memory[programCounter];
+                    programCounter++;
+                    memory[address] = A;
+                    System.out.println("STA: Stored A (" + A + ") to memory[" + address + "]");
+                    break;
+                }
+                case 6: {
+                    int address = memory[programCounter];
+                    programCounter++;
+                    A = memory[address];
+                    updateZeroAndNegativeFlags(A);
+                    System.out.println("LDA (from memory): Loaded " + A + " from memory[" + address + "]");
+                    break;
+                }
+                case 7: {
+                    X = A;
+                    updateZeroAndNegativeFlags(X);
+                    System.out.println("TAX: Transferred A to X. X is now " + X);
+                    break;
+                }
+                case 8: {
+                    A = X;
+                    updateZeroAndNegativeFlags(A);
+                    System.out.println("TXA: Transferred X to A. A is now " + A);
+                    break;
+                }
+                case 9: {
+                    X = X + 1;
+                    if (X > 255) X = 0; // Wrap around
+                    updateZeroAndNegativeFlags(X);
+                    System.out.println("INX: Incremented X. X is now " + X);
+                    break;
+                }
+                case 10: {
+                    Y = Y + 1;
+                    if (Y > 255) Y = 0; // Wrap around
+                    updateZeroAndNegativeFlags(Y);
+                    System.out.println("INY: Incremented Y. Y is now " + Y);
+                    break;
+                }
+                case 11: {
+                    X = X - 1;
+                    if( X < 0) X = 255;
+                    updateZeroAndNegativeFlags(X);
+                    System.out.println("DEX: Decremented X. X is now " + X);
+                    break;
+                }   
+                case 12:  {
+                    int number = memory[programCounter];
+                    programCounter++; // Move past the data
+                    int result = A - number;
+                    carryFlag = (A >= number);
+                    updateZeroAndNegativeFlags(result);
+                    System.out.println("CMP: Compared A (" + A + ") with " + number);
+                    System.out.println("     Zero flag: " + zeroFlag + ", Negative flag: " + negativeFlag);
+                    break;
+                }
+                case 13: {
+                    // 13 = Branch if Zero flag is set
+                    int offset = memory[programCounter];
+                    programCounter++; // Move past the offset
+                    if (zeroFlag) {
+                        programCounter = offset;
+                        System.out.println("BEQ: Zero flag is set! Jumping to position " + offset);
+                    } else {
+                        System.out.println("BEQ: Zero flag is not set. Continue normally.");
+                    }
+                    break;
+                }
+                case 14: {
+                    // 14 = Branch if Zero flag is NOT set
+                    int offset = memory[programCounter];
+                    programCounter++; // Move past the offset
+                    if (!zeroFlag) {
+                        programCounter = offset;
+                        System.out.println("BNE: Zero flag is not set! Jumping to position " + offset);
+                    } else {
+                        System.out.println("BNE: Zero flag is set. Continue normally.");
+                    }
+                    break;
+                }
+                case 15: {
+                    // 15 = CPX - Compare X with a number
+                    int number = memory[programCounter];
+                    programCounter++;
+                    int result = X - number;
+                    updateZeroAndNegativeFlags(result);
+                    System.out.println("CPX: Compared X(" + X + ") with " + number);
+                    System.out.println("Zero flag: " + zeroFlag + ", Negative flag: " + negativeFlag);
+                    break;
+                }
+                case 16:{
+                    // 16 = CPY - Compare Y with a number
+                    int number = memory[programCounter];
+                    programCounter++;
+                    int result = Y - number;
+                    updateZeroAndNegativeFlags(result);
+                    System.out.println("CPY: Compared Y (" + Y + ") with " + number);
+                    System.out.println("     Zero flag: " + zeroFlag + ", Negative flag: " + negativeFlag);
+                    break;
+                }
+                case 17: {
+                    // 17 = ADC - Add with Carry
+                    int number = memory[programCounter];
+                    programCounter++;
+                    
+                    // Add with old carry
+                    int result = A + number + (carryFlag ? 1 : 0);
+                    
+                    // Set NEW carry if overflow
+                    carryFlag = (result > 255);  // ← Check BEFORE masking!
+                    
+                    // Store result
+                    A = result & 0xFF; // Bitwise AND operation (1 + 0 = 0, 1 + 1 = 1, 0 + 0 = 0, 1 + 0 = 0)
+                    
+                    // Update Z and N
+                    updateZeroAndNegativeFlags(A);
+                    
+                    System.out.println("ADC: Added " + number + " to A. A is now " + A);
+                    System.out.println("     Carry flag: " + carryFlag);
+                    break;
+                }
+                default:
+                    System.out.println("Unknown instruction: " + instruction);
+                    return;
             }
             System.out.println("     A=" + A + " X=" + X + " Y=" + Y + " PC=" + programCounter);
             System.out.println();
         }
-        System.out.println("=== FINAL STATE ===");
-        System.out.println("A: " + A);
-        System.out.println("X: " + X);
-        System.out.println("Y: " + Y);
     }
 
-    private void updateFlags(int value) {
+    private void updateZeroAndNegativeFlags(int value) {
         value = value & 255;
         zeroFlag = (value == 0);
-        negativeFlag = (value >= 128);
+        negativeFlag = (value >= 128) ;
     }
     public static void main(String[] args) throws Exception {
-        example3Better();
+        example6();
     }
 
     // Example: Basic operations
@@ -274,6 +306,38 @@ public class App {
         cpu.memory[6] = 9;    // INX
         cpu.memory[7] = 10;   // INY
         cpu.memory[8] = 0;    // Stop
+        
+        cpu.run();
+    }
+
+    public static void example5() {
+        System.out.println("=== EXAMPLE 5: ADC and Carry Flag ===\n");
+        App cpu = new App();
+        
+        // Load 200 into A
+        // Add 100 to A (should wrap around to 44 and set carry flag)
+        
+        cpu.memory[0] = 1;    // LDA
+        cpu.memory[1] = 200;  // Load 200
+        cpu.memory[2] = 17;   // ADC
+        cpu.memory[3] = 100;  // Add 100
+        cpu.memory[4] = 0;    // Stop
+        
+        cpu.run();
+    }
+
+    public static void example6() {
+        System.out.println("=== EXAMPLE 5: ADC with no carry===\n");
+        App cpu = new App();
+        
+        // Load 200 into A
+        // Add 100 to A (should wrap around to 44 and set carry flag)
+        
+        cpu.memory[0] = 1;    // LDA
+        cpu.memory[1] = 200;  // Load 200
+        cpu.memory[2] = 17;   // ADC
+        cpu.memory[3] = 4;  // Add 4
+        cpu.memory[4] = 0;    // Stop
         
         cpu.run();
     }
