@@ -176,6 +176,34 @@ public class App {
                     System.out.println("     Carry flag: " + carryFlag);
                     break;
                 }
+                case 18:
+                    {// 18 = CLC - Clear Carry Flag
+                    carryFlag = false;
+                    System.out.println("CLC: Cleared carry flag");
+                    break;}
+                case 19:
+                    {// 19 = SEC - Set Carry Flag
+                    carryFlag = true;
+                    System.out.println("SEC: Set carry flag");  
+                    break; } 
+                case 20:
+                    {// 20 = SBC - Subtract with Carry
+                    int number = memory[programCounter];
+                    programCounter++;
+                    
+                    int result = A - number - (carryFlag ? 0 : 1); // Subtract with old carry (if carry is clear, we subtract an extra 1)
+                    carryFlag = (result >= 0);
+
+                    if (result < 0) {
+                        result = result + 256; // Wrap around for negative results
+                    }
+
+                    A = result & 0xFF;
+
+                    updateZeroAndNegativeFlags(A);
+                    System.out.println("SBC: Subtracted " + number + " from A. A is now " + A);
+                    System.out.println("     Carry flag: " + carryFlag);
+                    break;}
                 default:
                     System.out.println("Unknown instruction: " + instruction);
                     return;
@@ -191,7 +219,7 @@ public class App {
         negativeFlag = (value >= 128) ;
     }
     public static void main(String[] args) throws Exception {
-        example6();
+        exampleSBC2();
     }
 
     // Example: Basic operations
@@ -338,6 +366,32 @@ public class App {
         cpu.memory[2] = 17;   // ADC
         cpu.memory[3] = 4;  // Add 4
         cpu.memory[4] = 0;    // Stop
+        
+        cpu.run();
+    }
+
+    public static void example7() {
+        App cpu = new App();
+
+        cpu.memory[0] = 19; // SEC
+        cpu.memory[1] = 1;  // LDA
+        cpu.memory[2] = 50; // Load 50
+        cpu.memory[3] = 20; // SBC
+        cpu.memory[4] = 20; // Subtract 20
+        cpu.memory[5] = 0;  // Stop
+
+        cpu.run();
+    }
+
+    public static void exampleSBC2() {
+        App cpu = new App();
+        
+        cpu.memory[0] = 19;   // SEC
+        cpu.memory[1] = 1;    // LDA
+        cpu.memory[2] = 10;   // Load 10
+        cpu.memory[3] = 20;   // SBC
+        cpu.memory[4] = 50;   // Subtract 50 (bigger than 10!)
+        cpu.memory[5] = 0;    // Stop
         
         cpu.run();
     }
