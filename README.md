@@ -82,3 +82,62 @@ Building a proper Bus class
 
 Time: Many hours!
 This is the big one - learning how the NES displays graphics.
+
+## Notes:
+
+# Memory
+
+NES has 65,536 memory addresses (0x0000 to 0xFFFF). But different parts of this address space mean different things.
+
+Address Range Size What It's Used For
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+0x0000 - 0x00FF 256 bytes Zero Page (Fast RAM)
+0x0100 - 0x01FF 256 bytes Stack
+0x0200 - 0x07FF 1.5 KB General RAM
+0x0800 - 0x1FFF (mirrors) Mirrors of 0x0000-0x07FF
+0x2000 - 0x2007 8 bytes PPU Registers (Graphics)
+0x2008 - 0x3FFF (mirrors) Mirrors of PPU registers
+0x4000 - 0x4017 24 bytes APU & I/O Registers (Sound/Input)
+0x4018 - 0x401F 8 bytes APU & I/O (rarely used)
+0x4020 - 0xFFFF ~49 KB Cartridge space (ROM, mapper)
+
+More generalized layout:
+
+0xFFFF ─┐
+│ Interrupt Vectors
+0xFFFA ─┘
+
+0x8000 ─┐
+│ ROM (Program Code typically)
+│
+0x0200 ─┘
+
+0x0100 ─┐
+│ Stack Page
+0x01FF ─┘
+
+0x0000 ─┐
+│ Zero Page
+0x00FF ─┘
+
+# Stack
+
+In the 6502, the stack:
+
+- Lives in memory from 0x0100 to 0x01FF (256 bytes)
+- Uses the SP (Stack Pointer) register to track the top
+- Grows downward (high address → low address)
+
+# Stack Pointer (SP)
+
+The SP register points to the next free space on the stack.
+
+When you PUSH a value:
+
+- Store the value at 0x0100 + SP
+- Decrement SP (move down)
+
+When you POP a value:
+
+- Increment SP (move up)
+- Read the value from 0x0100 + SP
