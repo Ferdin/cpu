@@ -85,7 +85,7 @@ This is the big one - learning how the NES displays graphics.
 
 ## Notes:
 
-# Memory
+### Memory
 
 NES has 65,536 memory addresses (0x0000 to 0xFFFF). But different parts of this address space mean different things.
 
@@ -103,24 +103,23 @@ Address Range Size What It's Used For
 
 More generalized layout:
 
-0xFFFF ─┐
-│ Interrupt Vectors
-0xFFFA ─┘
+0xFFFF
+Interrupt Vectors
+0xFFFA
 
-0x8000 ─┐
-│ ROM (Program Code typically)
-│
-0x0200 ─┘
+0x8000
+ROM (Program Code typically)
+0x0200
 
-0x0100 ─┐
-│ Stack Page
-0x01FF ─┘
+0x0100
+Stack Page
+0x01FF
 
-0x0000 ─┐
-│ Zero Page
-0x00FF ─┘
+0x0000
+Zero Page
+0x00FF
 
-# Stack
+### Stack
 
 In the 6502, the stack:
 
@@ -128,7 +127,7 @@ In the 6502, the stack:
 - Uses the SP (Stack Pointer) register to track the top
 - Grows downward (high address → low address)
 
-# Stack Pointer (SP)
+### Stack Pointer (SP)
 
 The SP register points to the next free space on the stack.
 
@@ -141,3 +140,45 @@ When you POP a value:
 
 - Increment SP (move up)
 - Read the value from 0x0100 + SP
+
+### Understanding the `|=` Operator
+
+The `|=` is a **bitwise OR assignment**. this is how it works:
+
+### What is `|` (OR)?
+
+```
+a | b   means:  Set bit to 1 if EITHER a OR b has that bit set
+
+Example:
+  00000001  (0x01)
+| 10000000  (0x80)
+----------
+  10000001  (0x81)  ← Result has both bits set!
+```
+
+### Understanding the `&` Operator
+
+The `&` is a **bitwise AND**. It checks if a specific bit is set:
+
+```
+a & b   means:  Set bit to 1 ONLY if BOTH a AND b have that bit set
+
+Example:
+  10000001  (0x81)
+& 00000001  (0x01 - checking bit 0)
+----------
+  00000001  (bit 0 was set!)
+
+  10000001  (0x81)
+& 00000010  (0x02 - checking bit 1)
+----------
+  00000000  (bit 1 was NOT set)
+```
+
+### High and Low Bytes
+
+Eg: 10101010 01010101
+
+The high byte is 10101010
+The low byte is 01010101
