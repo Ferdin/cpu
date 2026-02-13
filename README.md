@@ -182,3 +182,29 @@ Eg: 10101010 01010101
 
 The high byte is 10101010
 The low byte is 01010101
+
+Writing 0x1234 at address 0x8000:
+memWriteU16(0x8000, 0x1234);
+
+Results in:
+memory[0x8000] = 0x34 (low byte)
+memory[0x8001] = 0x12 (high byte)
+
+Reading it back:
+int value = memReadU16(0x8000); // Returns 0x1234
+
+reset() - Resets the CPU state:
+
+Clears all registers to 0
+Reads the program counter from address 0xFFFC (the reset vector in 6502 architecture)
+
+load() - Loads a program into memory:
+
+Copies the program to memory starting at address 0x8000
+Writes the start address (0x8000) to the reset vector at 0xFFFC
+
+loadAndRun() - Convenience method that:
+
+Loads the program
+Resets the CPU (which sets the program counter to 0x8000)
+Starts execution

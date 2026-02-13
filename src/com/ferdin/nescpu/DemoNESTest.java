@@ -1,0 +1,57 @@
+package com.ferdin.nescpu;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class DemoNESTest {
+    @Test
+    void test_0xA9_lda_immediate_load_data(){
+        DemoNES nes = new DemoNES();
+        nes.loadAndRun(new byte[] {(byte) 0xA9, (byte) 0x05, (byte) 0x00});
+
+        assertEquals(0x05, nes.registerA);
+        assertEquals(0, nes.status & 0b0000_0010); // Zero flag should be clear
+        assertEquals(0, nes.status & 0b1000_0000); // Negative flag should be clear
+    }
+    @Test
+    void test_0xA9_lda_zero_flag() {
+        DemoNES nes = new DemoNES();
+
+        nes.loadAndRun(new byte[] {
+                (byte) 0xA9,
+                (byte) 0x00,
+                (byte) 0x00
+        });
+
+        assertEquals(0b10, nes.status & 0b0000_0010); // Zero flag should be set
+    }
+    @Test
+    void test_0xaa_tax_move_a_to_x(){
+        DemoNES nes = new DemoNES();
+        nes.loadAndRun(new byte[] {
+            (byte) 0xA9, (byte) 0x0A,  // LDA #$0A (load 10 into A)
+            (byte) 0xAA,                // TAX (transfer A to X)
+            (byte) 0x00                 // BRK
+        });
+        assertEquals(10, nes.registerX);
+    }
+    @Test
+    void test_5_ops_working_together(){
+        DemoNES nes = new DemoNES();
+        nes.loadAndRun(new byte[]{
+                (byte) 0xA9, (byte) 0xC0, 
+                (byte) 0xAA,              
+                (byte) 0xE8, (byte) 0x00           
+        });
+
+        assertEquals(0xC1, nes.registerX & 0xFF);
+    }
+    @Test
+    void test_inx_overflow(){
+        DemoNES nes = new DemoNES();
+        nes.registerX = 0xFF;
+        nes.loadAndRun(new byte[]{
+            (byte) 0xE8, (byte) 0xE8, (byte) 0x00
+        });
+        assertEquals(2, nes.registerX & 0xFF);
+    }
+}

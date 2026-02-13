@@ -17,84 +17,6 @@ public class NESCpu {
         return memory[address & 0xFFFF] & 0xFF; // Ensure we return a byte value
     }
 
-    String addressingMode;
-    
-    private int fetchOperand() {
-        switch(addressingMode) {
-            case "IMMEDIATE":
-                // Value is the next byte after opcode
-                return memory[PC++] & 0xFF;
-                
-            case "ZERO_PAGE":
-                // Address is in zero page ($00-$FF)
-                int zpAddr = memory[PC++] & 0xFF;
-                return memory[zpAddr] & 0xFF;
-                
-            case "ZERO_PAGE_X":
-                // Address is (zero page + X) wrapped in zero page
-                int zpxAddr = (memory[PC++] + X) & 0xFF;
-                return memory[zpxAddr] & 0xFF;
-                
-            case "ABSOLUTE":
-                // 16-bit address (little-endian: low byte, high byte)
-                int low = memory[PC++] & 0xFF;
-                int high = memory[PC++] & 0xFF;
-                int absAddr = (high << 8) | low;
-                return memory[absAddr] & 0xFF;
-                
-            case "ABSOLUTE_X":
-                // 16-bit address + X
-                low = memory[PC++] & 0xFF;
-                high = memory[PC++] & 0xFF;
-                int baseAddr = (high << 8) | low;
-                int absxAddr = (baseAddr + X) & 0xFFFF;
-                
-                // Check for page boundary cross (add 1 cycle if crossed)
-                if((baseAddr & 0xFF00) != (absxAddr & 0xFF00)) {
-                    cycles++; // Page boundary crossed
-                }
-                return memory[absxAddr] & 0xFF;
-                
-            case "ABSOLUTE_Y":
-                // 16-bit address + Y
-                low = memory[PC++] & 0xFF;
-                high = memory[PC++] & 0xFF;
-                baseAddr = (high << 8) | low;
-                int absyAddr = (baseAddr + Y) & 0xFFFF;
-                
-                // Check for page boundary cross
-                if((baseAddr & 0xFF00) != (absyAddr & 0xFF00)) {
-                    cycles++;
-                }
-                return memory[absyAddr] & 0xFF;
-                
-            case "INDIRECT_X":
-                // Indexed indirect: ((zero page + X) points to address)
-                int zpBase = (memory[PC++] + X) & 0xFF;
-                low = memory[zpBase] & 0xFF;
-                high = memory[(zpBase + 1) & 0xFF] & 0xFF; // Wrap in zero page
-                int indxAddr = (high << 8) | low;
-                return memory[indxAddr] & 0xFF;
-                
-            case "INDIRECT_Y":
-                // Indirect indexed: (zero page pointer) + Y
-                int zpPtr = memory[PC++] & 0xFF;
-                low = memory[zpPtr] & 0xFF;
-                high = memory[(zpPtr + 1) & 0xFF] & 0xFF; // Wrap in zero page
-                baseAddr = (high << 8) | low;
-                int indyAddr = (baseAddr + Y) & 0xFFFF;
-                
-                // Check for page boundary cross
-                if((baseAddr & 0xFF00) != (indyAddr & 0xFF00)) {
-                    cycles++;
-                }
-                return memory[indyAddr] & 0xFF;
-                
-            default:
-                throw new IllegalStateException("Unknown addressing mode: " + addressingMode);
-        }
-    }
-    
     public void run() {
             while(true){
             int instruction = read(PC);
@@ -116,7 +38,7 @@ public class NESCpu {
                     A = A + X;
                     if(A > 255) A = A - 256;
                     updateZeroAndNegativeFlags(A);
-                    System.out.println("ADC: Added X to A. A is now " + A);
+                    System.out.println("ADD: Added X to A. A is now " + A);
                     break;
                 }
                 // Other cases handled below for clarity
