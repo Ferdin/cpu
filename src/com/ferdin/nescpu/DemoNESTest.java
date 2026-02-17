@@ -13,6 +13,15 @@ public class DemoNESTest {
         assertEquals(0, nes.status & 0b1000_0000); // Negative flag should be clear
     }
     @Test
+    void test_lda_from_memory(){
+        DemoNES nes = new DemoNES();
+        nes.memWrite(0x10,(byte) 0x55);
+        nes.loadAndRun(new byte[] {
+            (byte) 0xa5, (byte) 0x10, (byte) 0x00
+        });
+        assertEquals(nes.registerA, 0x55);
+    }
+    @Test
     void test_0xA9_lda_zero_flag() {
         DemoNES nes = new DemoNES();
 
