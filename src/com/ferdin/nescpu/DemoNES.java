@@ -20,6 +20,19 @@ public class DemoNES {
         // 64KB Memory
         private byte[] memory;
 
+        // Flags
+        private boolean carryFlag = false;
+
+        // Flag bit masks
+        public static final int CARRY             = 0b00000001;
+        public static final int ZERO              = 0b00000010;
+        public static final int INTERRUPT_DISABLE = 0b00000100;
+        public static final int DECIMAL_MODE      = 0b00001000;
+        public static final int BREAK             = 0b00010000;
+        public static final int BREAK2            = 0b00100000;
+        public static final int OVERFLOW          = 0b01000000;
+        public static final int NEGATIVE          = 0b10000000;
+
         public enum AddressingMode {
             IMMEDIATE,
             ZERO_PAGE,
@@ -262,6 +275,90 @@ public class DemoNES {
             update_zero_and_negative_flags(registerY);
         }
 
+        public void adc(AddressingMode mode){
+                int addr = getOperandAddress(mode);
+                int value = memRead(addr);
+
+                int oldA = registerA;   // Save original A
+
+                int result = oldA + value + (carryFlag ? 1 : 0);
+
+                updateCarryFlag(result);
+
+                int newA = result & 0xFF;
+
+                updateOverflowFlag(oldA, value, newA);
+
+                registerA = newA;
+
+                update_zero_and_negative_flags(registerA);
+        }
+
+        private int aslValue(int value) {
+
+            // Set Carry from bit 7 before shift
+            if ((value & 0x80) != 0) {
+                status |= CARRY;
+            } else {
+                status &= ~CARRY;
+            }
+
+            int result = (value << 1) & 0xFF;
+
+            update_zero_and_negative_flags(result);
+
+            return result;
+        }
+
+        public void aslAccumulator() {
+            registerA = aslValue(registerA);
+        }
+
+        public void asl(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+
+            int result = aslValue(value);
+
+            memWrite(addr, (byte) (result & 0xFF));
+        }
+
+        public void bcc() {
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            if ((status & CARRY) == 0) {   // Carry clear?
+                int signedOffset = (byte) offset;
+                programCounter += signedOffset;
+            }
+        }
+
+        public void bcs(){
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            if ((status & CARRY) != 0) {   // Carry set?
+                int signedOffset = (byte) offset;
+                programCounter += signedOffset;
+            }
+        }
+
+        public void sec() {
+            status |= CARRY;
+        }
+
+        public void beq() {
+
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            if ((status & ZERO) != 0) {  // Zero flag set?
+                int signedOffset = (byte) offset; // convert to signed
+                programCounter += signedOffset;
+            }
+        }
+
+
         public void update_zero_and_negative_flags(int result){
             // ---- Zero Flag (bit 1) ----
             if (result == 0) {
@@ -283,6 +380,14 @@ public class DemoNES {
                 status |= 0b0000_0001;   // Set carry
             } else {
                 status &= 0b1111_1110;   // Clear carry
+            }
+        }
+
+        private void updateOverflowFlag(int oldA, int value, int result) {
+            if (((oldA ^ result) & (value ^ result) & 0x80) != 0) {
+                status |= OVERFLOW;      // set V flag
+            } else {
+                status &= ~OVERFLOW;     // clear V flag
             }
         }
 
@@ -480,7 +585,7 @@ public class DemoNES {
                         programCounter++;
                         break;
                     }
-                    case 0x75: {
+                    case 0x35: {
                         // AND - Zero Page,X
                         and(AddressingMode.ZERO_PAGE_X);
                         programCounter++;
@@ -705,6 +810,103 @@ public class DemoNES {
                     case 0x9A: {
                         // TXS - Transfer X to Stack Pointer
                         stackPointer = registerX;
+                        break;
+                    }
+                    case 0x69: {
+                        // ADC - Immediate
+                        adc(AddressingMode.IMMEDIATE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x65: {
+                        // ADC - Zero Page
+                        adc(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x75: {
+                        // ADC - Zero Page,X
+                        adc(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x6D: {
+                        // ADC - Absolute
+                        adc(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x7D: {
+                        // ADC - Absolute,X
+                        adc(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x79: {
+                        // ADC - Absolute,Y
+                        adc(AddressingMode.ABSOLUTE_Y);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x61: {
+                        // ADC - Indirect,X
+                        adc(AddressingMode.INDIRECT_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x71: {
+                        // ADC - Indirect,Y
+                        adc(AddressingMode.INDIRECT_Y);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x0A: {
+                        // ASL - Accumulator
+                        aslAccumulator();
+                        break;
+                    }
+                    case 0x06: {
+                        // ASL - Zero Page
+                        asl(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x16: {
+                        // ASL - Zero Page,X
+                        asl(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x0E: {
+                        // ASL - Absolute
+                        asl(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x1E: {
+                        // ASL - Absolute,X
+                        asl(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x90: {
+                        // BCC - Branch if Carry Clear
+                        bcc();
+                        break;
+                    }
+                    case 0xB0: {
+                        // BCS - Branch if Carry Set
+                        bcs();
+                        break;
+                    }
+                    case 0x38: {
+                        // SEC - Set Carry Flag
+                        sec();
+                        break;
+                    }
+                    case 0xf0: {
+                        // BEQ - Branch if Equal (Zero flag set)
+                        beq();
                         break;
                     }
                     case 0x00:

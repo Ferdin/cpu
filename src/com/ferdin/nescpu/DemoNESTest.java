@@ -63,4 +63,39 @@ public class DemoNESTest {
         });
         assertEquals(2, nes.registerX & 0xFF);
     }
+    @Test
+    void test_bcc_branch_taken(){
+        DemoNES nes = new DemoNES();
+        nes.loadAndRun(new byte[]{
+            (byte) 0x90, (byte) 0x02, // BCC +2
+            (byte) 0xA9, (byte) 0x01, // LDA #$01 (should be skipped)
+            (byte) 0xA9, (byte) 0x02, // LDA #$02 (should be executed)
+            (byte) 0x00
+        });
+        assertEquals(0x02, nes.registerA);
+    }
+    @Test
+    void test_bcs_branch_taken(){
+        DemoNES nes = new DemoNES();
+        nes.loadAndRun(new byte[]{
+            (byte) 0x38, // SEC - Set Carry Flag
+            (byte) 0xB0, (byte) 0x02, // BCC +2
+            (byte) 0xA9, (byte) 0x01, // LDA #$01 (should be skipped)
+            (byte) 0xA9, (byte) 0x02, // LDA #$02 (should be executed)
+            (byte) 0x00
+        });
+        assertEquals(0x02, nes.registerA);
+    }
+    @Test
+    void test_bcs_branch_not_taken(){
+        DemoNES nes = new DemoNES();
+        nes.loadAndRun(new byte[]{
+            (byte) 0xB0, (byte) 0x02, // BCS +2 (not taken)
+            (byte) 0xA9, (byte) 0x01, // LDA #$01 (should be executed)
+            (byte) 0x00,              // BRK (stop here)
+            (byte) 0xA9, (byte) 0x02, // LDA #$02 (should be skipped)
+            (byte) 0x00
+        });
+        assertEquals(0x01, nes.registerA);
+    }
 }
