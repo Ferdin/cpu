@@ -347,6 +347,11 @@ public class DemoNES {
             status |= CARRY;
         }
 
+        public void clc() {
+            status &= ~CARRY;  // clear the carry bit
+            carryFlag = false; // if you are also tracking it separately
+        }
+
         public void beq() {
 
             int offset = memRead(programCounter);
@@ -358,6 +363,93 @@ public class DemoNES {
             }
         }
 
+        public void bit(AddressingMode mode) {
+
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+
+            // 1️⃣ Zero flag: set if (A & value) == 0
+            if ((registerA & value) == 0) {
+                status |= ZERO;
+            } else {
+                status &= ~ZERO;
+            }
+
+            // 2️⃣ Negative flag = bit 7 of memory
+            if ((value & 0x80) != 0) {
+                status |= NEGATIVE;
+            } else {
+                status &= ~NEGATIVE;
+            }
+
+            // 3️⃣ Overflow flag = bit 6 of memory
+            if ((value & 0x40) != 0) {
+                status |= OVERFLOW;
+            } else {
+                status &= ~OVERFLOW;
+            }
+        }
+
+        public void bmi() {
+
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            if ((status & NEGATIVE) != 0) {  // Negative flag set?
+                programCounter += (byte) offset;
+            }
+        }
+
+        public void bne() {
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            if ((status & ZERO) == 0) {  // Zero flag clear?
+                programCounter += (byte) offset;
+            }
+        }
+
+        public void bpl() {
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            // Negative flag clear?
+            if ((status & NEGATIVE) == 0) {
+                programCounter += (byte) offset;  // signed addition
+            }
+        }
+
+        public void bvc() {
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            // Overflow flag clear?
+            if ((status & OVERFLOW) == 0) {
+                programCounter += (byte) offset;  // signed addition
+            }
+        }
+
+        public void bvs() {
+            int offset = memRead(programCounter);
+            programCounter++;
+
+            // Overflow flag set?
+            if ((status & OVERFLOW) != 0) {
+                programCounter += (byte) offset;  // signed addition
+            }
+        }
+
+        public void cld(){
+            status &= ~DECIMAL_MODE;  // clear the Decimal Mode flag
+        }
+
+        public void cli() {
+            status &= ~INTERRUPT_DISABLE;  // clear the I flag
+        }
+
+        public void clv() {
+            status &= ~OVERFLOW;  // clear the V flag
+        }
 
         public void update_zero_and_negative_flags(int result){
             // ---- Zero Flag (bit 1) ----
@@ -391,6 +483,21 @@ public class DemoNES {
             }
         }
 
+        public void cmp(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);         // fetch operand
+            int result = registerA - value;    // subtract
+
+            // Update Carry flag: set if A >= value
+            if (registerA >= value) {
+                status |= CARRY;
+            } else {
+                status &= ~CARRY;
+            }
+
+            // Update Zero and Negative flags
+            update_zero_and_negative_flags(result & 0xFF);  // result is treated as 8-bit
+        }
 
         public void run(){
             
@@ -907,6 +1014,111 @@ public class DemoNES {
                     case 0xf0: {
                         // BEQ - Branch if Equal (Zero flag set)
                         beq();
+                        break;
+                    }
+                    case 0x24: {
+                        // BIT - Test Bits in Memory with Accumulator
+                        bit(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x2C: {
+                        // BIT - Absolute
+                        bit(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x30: {
+                        // BMI - Branch if Minus (Negative flag set)
+                        bmi();
+                        break;
+                    }
+                    case 0xD0: {
+                        // BNE - Branch if Not Equal (Zero flag clear)
+                        bne();
+                        break;
+                    }
+                    case 0x10: {
+                        // BPL - Branch if Positive (Negative flag clear)
+                        bpl();
+                        break;
+                    }
+                    case 0x50: {
+                        // BVC - Branch if Overflow Clear
+                        bvc();
+                        break;
+                    }
+                    case 0x70: {
+                        // BVS - Branch if Overflow Set
+                        bvs();
+                        break;
+                    }
+                    case 0x18: {
+                        // CLC - Clear Carry Flag
+                        clc();
+                        break;
+                    }
+                    case 0xD8: {
+                        // CLD - Clear Decimal Mode
+                        cld();
+                        break;
+                    }
+                    case 0x58: {
+                        // CLI - Clear Interrupt Disable
+                        cli();
+                        break;
+                    }
+                    case 0xB8: {
+                        // CLV - Clear Overflow Flag
+                        clv();
+                        break;
+                    }
+                    case 0xc9: {
+                        // CMP - Compare
+                        cmp(AddressingMode.IMMEDIATE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xC5: {
+                        // CMP - Zero Page
+                        cmp(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xD5: {
+                        // CMP - Zero Page,X
+                        cmp(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xCD: {
+                        // CMP - Absolute
+                        cmp(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xDD: {
+                        // CMP - Absolute,X
+                        cmp(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xD9: {
+                        // CMP - Absolute,Y
+                        cmp(AddressingMode.ABSOLUTE_Y);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xC1: {
+                        // CMP - Indirect,X
+                        cmp(AddressingMode.INDIRECT_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xD1: {
+                        // CMP - Indirect,Y
+                        cmp(AddressingMode.INDIRECT_Y);
+                        programCounter++;
                         break;
                     }
                     case 0x00:

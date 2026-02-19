@@ -98,4 +98,99 @@ public class DemoNESTest {
         });
         assertEquals(0x01, nes.registerA);
     }
+    @Test
+    void test_bit(){
+        DemoNES nes = new DemoNES();
+        nes.registerA = 0b00000001;
+        nes.memWrite(0x10, (byte)0b11000000);
+        nes.loadAndRun(new byte[]{
+            (byte)0x24,
+            (byte)0x10,
+            (byte)0x00
+        });
+        assertTrue((nes.status & 0b10000000) != 0); // Negative flag should be set
+        assertTrue((nes.status & 0b01000000) != 0); // Overflow flag should be set
+        assertTrue((nes.status & 0b00000010) != 0); // because A and memory is zero
+    }
+    @Test
+    void test_bmi_branch_taken(){
+        DemoNES cpu = new DemoNES();
+        cpu.status |= DemoNES.NEGATIVE;  // set negative
+
+        cpu.loadAndRun(new byte[]{
+            (byte)0x30,  // BMI
+            (byte)0x01,  // +1
+            (byte)0x00,  // skipped
+            (byte)0x00   // executed
+        });
+        
+        assertEquals(0x8003, cpu.programCounter);
+    }
+    @Test
+    void test_bne_branch_taken() {
+        DemoNES cpu = new DemoNES();
+        cpu.status &= ~DemoNES.ZERO;  // clear zero (so branch happens)
+
+        cpu.loadAndRun(new byte[]{
+            (byte)0xD0,  // BNE
+            (byte)0x01,  // +1
+            (byte)0x00,  // skipped
+            (byte)0x00   // executed
+        });
+
+        assertEquals(0x8004, cpu.programCounter);
+    }
+    @Test
+    void test_bne_not_taken() {
+        DemoNES cpu = new DemoNES();
+        cpu.load(new byte[]{(byte)0xD0, (byte)0x01, (byte)0x00});
+        cpu.reset();
+        cpu.status |= DemoNES.ZERO;  // set AFTER reset
+        cpu.run();
+        assertEquals(0x8003, cpu.programCounter);
+    }
+    @Test
+    void test_bpl_branch_taken() {
+        DemoNES cpu = new DemoNES();
+        cpu.load(new byte[]{
+            (byte)0x10,  // BPL
+            (byte)0x01,  // +1
+            (byte)0x00,  // skipped
+            (byte)0x00   // executed
+        });
+        cpu.reset();
+        cpu.status &= ~DemoNES.NEGATIVE;  // clear negative (so branch happens)
+        cpu.run();
+        assertEquals(0x8004, cpu.programCounter);
+    }
+    @Test
+    void test_bpl_no_branch_taken() {
+        DemoNES cpu = new DemoNES();
+        cpu.load(new byte[]{
+            (byte)0x10,  // BPL
+            (byte)0x01,  // +1
+            (byte)0x00,  // skipped
+            (byte)0x00   // executed
+        });
+        cpu.reset();
+        cpu.status |= DemoNES.NEGATIVE;  // set negative (so branch not taken)
+        cpu.run();
+        assertEquals(0x8003, cpu.programCounter);
+    }
+    @Test
+    void test_cmp_equal() {
+        DemoNES cpu = new DemoNES();
+
+        cpu.load(new byte[]{
+            (byte)0xC9, 0x42,
+            (byte)0x00
+        });
+        cpu.reset();
+        cpu.registerA = 0x42;  // set AFTER reset
+        cpu.run();
+
+        assertTrue((cpu.status & DemoNES.CARRY) != 0);
+        assertTrue((cpu.status & DemoNES.ZERO) != 0);
+        assertTrue((cpu.status & DemoNES.NEGATIVE) == 0);
+    }
 }
