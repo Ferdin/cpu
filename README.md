@@ -19,7 +19,7 @@ This is the big one - learning how the NES displays graphics.
 NES has 65,536 memory addresses (0x0000 to 0xFFFF). But different parts of this address space mean different things.
 
 Address Range Size What It's Used For
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 0x0000 - 0x00FF 256 bytes Zero Page (Fast RAM)
 0x0100 - 0x01FF 256 bytes Stack
 0x0200 - 0x07FF 1.5 KB General RAM
