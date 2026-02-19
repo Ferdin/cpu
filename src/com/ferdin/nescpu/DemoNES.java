@@ -115,6 +115,8 @@ public class DemoNES {
         public void reset() {
             registerA = 0;
             registerX = 0;
+            registerY = 0;
+            stackPointer = stack_reset;
             status = 0;
             programCounter = memReadU16(0xFFFC); // Reset vector
         }
@@ -148,7 +150,7 @@ public class DemoNES {
             return (hi << 8) | lo;
         }
 
-        private void memWriteU16(int pos, int data) {
+        public void memWriteU16(int pos, int data) {
             byte hi = (byte)((data >> 8) & 0xFF);
             byte lo = (byte)(data & 0xFF);
             memWrite(pos, lo);
@@ -451,6 +453,39 @@ public class DemoNES {
             status &= ~OVERFLOW;  // clear the V flag
         }
 
+        public void cpx(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+            int result = registerX - value;
+
+            // Carry flag
+            if (registerX >= value) {
+                status |= CARRY;
+            } else {
+                status &= ~CARRY;
+            }
+
+            // Zero & Negative flags
+            update_zero_and_negative_flags(result & 0xFF);
+        }
+
+        public void cpy(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+            int result = registerY - value;
+
+            // Carry flag
+            if (registerY >= value) {
+                status |= CARRY;
+            } else {
+                status &= ~CARRY;
+            }
+
+            // Zero & Negative flags
+            update_zero_and_negative_flags(result & 0xFF);
+        }
+
+
         public void update_zero_and_negative_flags(int result){
             // ---- Zero Flag (bit 1) ----
             if (result == 0) {
@@ -497,6 +532,196 @@ public class DemoNES {
 
             // Update Zero and Negative flags
             update_zero_and_negative_flags(result & 0xFF);  // result is treated as 8-bit
+        }
+
+        public void dec(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+
+            value = (value - 1) & 0xFF;   // wrap around 0x00 -> 0xFF
+
+            memWrite(addr, (byte) value);
+
+            update_zero_and_negative_flags(value);
+        }
+
+        public void jmpAbsolute() {
+            int addr = memReadU16(programCounter);
+            programCounter = addr;
+        }
+
+        public void jmpIndirect() {
+            int ptr = memReadU16(programCounter);
+
+            int lo = memRead(ptr);
+
+            int hi;
+            if ((ptr & 0x00FF) == 0x00FF) {
+                // Simulate 6502 page boundary bug
+                hi = memRead(ptr & 0xFF00);
+            } else {
+                hi = memRead(ptr + 1);
+            }
+
+            programCounter = (hi << 8) | lo;
+        }
+
+        private void stackPush(int value) {
+            memWrite(0x0100 + stackPointer, (byte)(value & 0xFF));
+            stackPointer--;
+        }
+
+        private void stackPushU16(int value) {
+            int hi = (value >> 8) & 0xFF;
+            int lo = value & 0xFF;
+
+            stackPush(hi);
+            stackPush(lo);
+        }
+
+        private int stackPop() {
+            stackPointer++;
+            return memRead(0x0100 + stackPointer);
+        }
+
+        private int stackPopU16() {
+            int lo = stackPop();
+            int hi = stackPop();
+            return (hi << 8) | lo;
+        }
+
+
+        public void jsr() {
+            int targetAddr = memReadU16(programCounter);
+
+            int returnAddr = programCounter + 1;
+
+            stackPushU16(returnAddr);
+
+            programCounter = targetAddr;
+        }
+
+        public void rts() {
+            int returnAddr = stackPopU16();
+            programCounter = returnAddr + 1;
+        }
+
+        private int lsrValue(int value) {
+            // Set carry from bit 0
+            if ((value & 0x01) != 0) {
+                status |= CARRY;
+            } else {
+                status &= ~CARRY;
+            }
+
+            int result = (value >> 1) & 0xFF;
+
+            // Update zero flag
+            if (result == 0) {
+                status |= ZERO;
+            } else {
+                status &= ~ZERO;
+            }
+
+            // Negative flag always cleared (bit 7 is 0)
+            status &= ~NEGATIVE;
+
+            return result;
+        }
+
+        public void lsrAccumulator() {
+            registerA = lsrValue(registerA);
+        }
+
+        public void lsr(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+
+            int result = lsrValue(value);
+
+            memWrite(addr, (byte) (result & 0xFF));
+        }
+
+        public void pha() {
+            stackPush(registerA);
+        }
+
+        public void php() {
+            // Copy status and set BREAK and BREAK2 bits
+            int flagsToPush = status | BREAK | BREAK2;
+            stackPush(flagsToPush);
+        }
+
+        public void plp() {
+            int value = stackPop();
+
+            // Normally, BREAK (bit 4) is ignored in CPU status
+            status = value & ~(BREAK | BREAK2);
+        }
+
+        private int rolValue(int value) {
+            int result = ((value << 1) & 0xFF); // shift left
+            if (carryFlag) {
+                result |= 0x01; // insert previous carry into bit 0
+            }
+
+            // Update carry from old bit 7
+            carryFlag = (value & 0x80) != 0;
+            if (carryFlag) status |= CARRY;
+            else status &= ~CARRY;
+
+            // Update zero and negative flags
+            update_zero_and_negative_flags(result);
+
+            return result & 0xFF;
+        }
+
+        public void rolAccumulator() {
+            registerA = rolValue(registerA);
+        }
+
+        public void rol(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+
+            int result = rolValue(value);
+
+            memWrite(addr, (byte) (result & 0xFF));
+        }
+
+        private int rorValue(int value) {
+            // Capture old bit 0 for carry
+            boolean oldCarry = (value & 0x01) != 0;
+
+            int result = (value >> 1) & 0xFF;
+
+            // Insert previous carry into bit 7
+            if (carryFlag) {
+                result |= 0x80;
+            }
+
+            // Update carry flag from old bit 0
+            carryFlag = oldCarry;
+            if (carryFlag) status |= CARRY;
+            else status &= ~CARRY;
+
+            // Update zero and negative flags
+            update_zero_and_negative_flags(result);
+
+            return result & 0xFF;
+        }
+
+        public void rorAccumulator() {
+            registerA = rorValue(registerA);
+        }
+
+        public void ror(AddressingMode mode) {
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+
+            int result = rorValue(value);
+
+            memWrite(addr, (byte) (result & 0xFF));
         }
 
         public void run(){
@@ -1119,6 +1344,188 @@ public class DemoNES {
                         // CMP - Indirect,Y
                         cmp(AddressingMode.INDIRECT_Y);
                         programCounter++;
+                        break;
+                    }
+                    case 0xE0: {
+                        // CPX - Compare X Register
+                        cpx(AddressingMode.IMMEDIATE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xE4: {
+                        // CPX - Zero Page
+                        cpx(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }   
+                    case 0xEC: {
+                        // CPX - Absolute
+                        cpx(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xC0: {
+                        // CPY - Compare Y Register
+                        cpy(AddressingMode.IMMEDIATE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xC4: {
+                        // CPY - Zero Page
+                        cpy(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xCC: {
+                        // CPY - Absolute
+                        cpy(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xC6: {
+                        // DEC - Zero Page
+                        dec(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xD6: {
+                        // DEC - Zero Page,X
+                        dec(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xCE: {
+                        // DEC - Absolute
+                        dec(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xDE: {
+                        // DEC - Absolute,X
+                        dec(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x6C: {
+                        // JMP - Indirect
+                        jmpIndirect();
+                        break;
+                    }
+                    case 0x4C: {
+                        // JMP - Absolute
+                        jmpAbsolute();
+                        break;
+                    }
+                    case 0x20:
+                        jsr();
+                        break;
+                    case 0x60:
+                        rts();
+                        break;   
+                    case 0x4A: {
+                        // LSR - Accumulator
+                        lsrAccumulator();
+                        break;
+                    }
+                    case 0x46: {
+                        // LSR - Zero Page
+                        lsr(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x56: {
+                        // LSR - Zero Page,X
+                        lsr(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x4E: {
+                        // LSR - Absolute
+                        lsr(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x5E: {
+                        // LSR - Absolute,X
+                        lsr(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x48: {
+                        // PHA - Push Accumulator on Stack
+                        pha();
+                        break;
+                    }
+                    case 0x08: {
+                        // PHP - Push Processor Status on Stack
+                        php();
+                        break;
+                    }
+                    case 0x28: {
+                        // PLP - Pull Processor Status from Stack
+                        plp();
+                        break;
+                    }   
+                    case 0x2A: {
+                        // ROL - Accumulator
+                        rolAccumulator();
+                        break;
+                    }
+                    case 0x26: {
+                        // ROL - Zero Page
+                        rol(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x36: {
+                        // ROL - Zero Page,X
+                        rol(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x2E: {
+                        // ROL - Absolute
+                        rol(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x3E: {
+                        // ROL - Absolute,X
+                        rol(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x6A: {
+                        // ROR - Accumulator
+                        rorAccumulator();
+                        break;
+                    }
+                    case 0x66: {
+                        // ROR - Zero Page
+                        ror(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x76: {
+                        // ROR - Zero Page,X
+                        ror(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0x6E: {
+                        // ROR - Absolute
+                        ror(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0x7E: {
+                        // ROR - Absolute,X
+                        ror(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xEA:{
+                        // NOP - No Operation
                         break;
                     }
                     case 0x00:

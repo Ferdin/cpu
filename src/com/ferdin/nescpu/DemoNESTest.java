@@ -193,4 +193,80 @@ public class DemoNESTest {
         assertTrue((cpu.status & DemoNES.ZERO) != 0);
         assertTrue((cpu.status & DemoNES.NEGATIVE) == 0);
     }
+    @Test
+    void test_jmp_absolute() {
+        DemoNES cpu = new DemoNES();
+
+        cpu.loadAndRun(new byte[]{
+            (byte)0x4C, 0x05, (byte)0x80,  // JMP $8005
+            (byte)0x00,                   // skipped
+            (byte)0x00,                   // skipped
+            (byte)0x00                    // executed
+        });
+
+        assertEquals(0x8006, cpu.programCounter);
+    }
+
+    @Test
+    void test_jmp_indirect() {
+        DemoNES cpu = new DemoNES();
+
+        cpu.memWriteU16(0x9000, 0x8005);
+
+        cpu.loadAndRun(new byte[]{
+            (byte)0x6C, 0x00, (byte)0x90,  // JMP ($9000)
+            (byte)0x00,                   // skipped
+            (byte)0x00,                   // skipped
+            (byte)0x00                    // executed
+        });
+
+        assertEquals(0x8006, cpu.programCounter);
+    }
+
+    @Test
+    void test_jsr_rts() {
+        DemoNES cpu = new DemoNES();
+
+        cpu.loadAndRun(new byte[]{
+            (byte)0x20, 0x05, (byte)0x80,  // JSR $8005
+            (byte)0x00,                   // BRK (should run after RTS)
+            (byte)0x00,                   // padding
+            (byte)0x60                    // RTS at $8005
+        });
+
+        assertEquals(0x8004, cpu.programCounter);
+    }
+
+    @Test
+    void test_pha() {
+        DemoNES cpu = new DemoNES();
+
+        cpu.load(new byte[]{
+            (byte)0x48,
+            (byte)0x00
+        });
+        cpu.reset();
+        cpu.registerA = 0x42;  // set AFTER reset
+        cpu.run();
+
+        int valueOnStack = cpu.memRead(0x0100 + cpu.stackPointer + 1);
+        assertEquals(0x42, valueOnStack);
+    }
+
+    @Test
+    void test_php() {
+        DemoNES cpu = new DemoNES();
+
+        cpu.load(new byte[]{
+            (byte)0x08,  // PHP
+            (byte)0x00   // BRK
+        });
+        cpu.reset();
+        cpu.status = 0x42;  // set AFTER reset
+        cpu.run();
+
+        int valueOnStack = cpu.memRead(0x0100 + cpu.stackPointer + 1);
+        assertEquals(0x42 | DemoNES.BREAK | DemoNES.BREAK2, valueOnStack);
+    }
+
 }
