@@ -1,6 +1,11 @@
 package com.ferdin.nescpu;
 
 public class DemoNES {
+
+    @FunctionalInterface
+    public interface CpuCallback {
+        void execute(DemoNES cpu);
+    }
     // I created this class to learn NESCPU from bugzmanov/nes_ebook
 //https://github.com/bugzmanov/nes_ebook/blob/master/src/chapter_3_2.md
         // CPU Registers (8-bit)
@@ -724,9 +729,68 @@ public class DemoNES {
             memWrite(addr, (byte) (result & 0xFF));
         }
 
-        public void run(){
+        public void rti() {
+            // 1. Restore status
+            int value = stackPop();
+
+            // Break flag is not actually stored in CPU
+            status = value & ~(BREAK | BREAK2);
+
+            // 2. Restore PC (low then high)
+            int lo = stackPop();
+            int hi = stackPop();
+
+            programCounter = (hi << 8) | lo;
+        }
+        
+        private void sbc(AddressingMode mode) {
+
+            int addr = getOperandAddress(mode);
+            int value = memRead(addr);
+
+            int carryIn = (status & CARRY) != 0 ? 1 : 0;
+
+            int result = registerA + (value ^ 0xFF) + carryIn;
+
+            // Carry flag (set if no borrow)
+            if (result > 0xFF) {
+                status |= CARRY;
+            } else {
+                status &= ~CARRY;
+            }
+
+            int finalResult = result & 0xFF;
+
+            // Overflow detection (clean subtraction form)
+            if (((registerA ^ finalResult) & (registerA ^ value) & 0x80) != 0) {
+                status |= OVERFLOW;
+            } else {
+                status &= ~OVERFLOW;
+            }
+
+            registerA = finalResult;
+
+            update_zero_and_negative_flags(registerA);
+        }
+
+        public void sed() {
+            status |= DECIMAL_MODE;
+        }
+
+        public void sei() {
+            status |= INTERRUPT_DISABLE;
+        }
+
+        public void run() {
+            runWithCallback(cpu -> {});
+        }
+
+        public void runWithCallback(CpuCallback callback) {
             
             while(true){
+                // Call callback before each instruction
+                callback.execute(this);
+
                 // Read opcode (convert signed byte to unsigned)
                 int opcode = memRead(programCounter) & 0xFF;
 
@@ -1524,10 +1588,72 @@ public class DemoNES {
                         programCounter += 2;
                         break;
                     }
+                    case 0xE9: {
+                        // SBC - Immediate
+                        sbc(AddressingMode.IMMEDIATE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xE5: {
+                        // SBC - Zero Page
+                        sbc(AddressingMode.ZERO_PAGE);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xF5: {
+                        // SBC - Zero Page,X
+                        sbc(AddressingMode.ZERO_PAGE_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xED: {
+                        // SBC - Absolute
+                        sbc(AddressingMode.ABSOLUTE);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xFD: {
+                        // SBC - Absolute,X
+                        sbc(AddressingMode.ABSOLUTE_X);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xF9: {
+                        // SBC - Absolute,Y
+                        sbc(AddressingMode.ABSOLUTE_Y);
+                        programCounter += 2;
+                        break;
+                    }
+                    case 0xE1: {
+                        // SBC - Indirect,X
+                        sbc(AddressingMode.INDIRECT_X);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xF1: {
+                        // SBC - Indirect,Y
+                        sbc(AddressingMode.INDIRECT_Y);
+                        programCounter++;
+                        break;
+                    }
+                    case 0xF8: {
+                        // SED - Set Decimal Flag
+                        sed();
+                        break;
+                    }
+                    case 0x78: {
+                        // SEI - Set Interrupt Disable
+                        sei();
+                        break;
+                    }
                     case 0xEA:{
                         // NOP - No Operation
                         break;
                     }
+                    case 0x40:
+                        // RTI - Return from Interrupt
+                        rti();
+                        break;
                     case 0x00:
                         // BRK - Break (for this demo, we'll just stop execution)
                         return;    
@@ -1536,7 +1662,4 @@ public class DemoNES {
                 }
             }
         }
-    public static void main(String[] args){
-        
-    }
 }
