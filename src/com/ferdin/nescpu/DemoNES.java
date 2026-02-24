@@ -625,25 +625,6 @@ public class DemoNES {
             memWrite(addr, (byte) (result & 0xFF));
         }
 
-        public void bcc() {
-            int offset = memRead(programCounter);
-            programCounter++;
-            if ((status & CARRY) == 0) {   // Carry clear?
-                int signedOffset = (byte) offset;
-                programCounter += signedOffset;
-            }
-        }
-
-        public void bcs(){
-            int offset = memRead(programCounter);
-            programCounter++;
-
-            if ((status & CARRY) != 0) {   // Carry set?
-                int signedOffset = (byte) offset;
-                programCounter += signedOffset;
-            }
-        }
-
         public void sec() {
             status |= CARRY;
         }
@@ -710,6 +691,10 @@ public class DemoNES {
         public void bvc() { branchIf((status & OVERFLOW) == 0); }
 
         public void bvs() { branchIf((status & OVERFLOW) != 0); }
+
+        public void bcc() { branchIf((status & CARRY) == 0); }
+
+        public void bcs() { branchIf((status & CARRY) != 0); }
 
         public void cld(){
             status &= ~DECIMAL_MODE;  // clear the Decimal Mode flag
