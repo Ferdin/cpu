@@ -146,7 +146,7 @@ public class DemoNESTest {
         cpu.load(new int[]{(byte)0xD0,0x01,0x00});
         cpu.reset();
         cpu.status |= DemoNES.ZERO;  // set AFTER reset
-        cpu.run();
+        cpu.step();
         assertEquals(0x8003, cpu.programCounter);
     }
     @Test
@@ -160,7 +160,7 @@ public class DemoNESTest {
         });
         cpu.reset();
         cpu.status &= ~DemoNES.NEGATIVE;  // clear negative (so branch happens)
-        cpu.run();
+        cpu.step();
         assertEquals(0x8004, cpu.programCounter);
     }
     @Test
@@ -174,7 +174,7 @@ public class DemoNESTest {
         });
         cpu.reset();
         cpu.status |= DemoNES.NEGATIVE;  // set negative (so branch not taken)
-        cpu.run();
+        cpu.step();
         assertEquals(0x8003, cpu.programCounter);
     }
     @Test
@@ -187,7 +187,7 @@ public class DemoNESTest {
         });
         cpu.reset();
         cpu.registerA = 0x42;  // set AFTER reset
-        cpu.run();
+        cpu.step();
 
         assertTrue((cpu.status & DemoNES.CARRY) != 0);
         assertTrue((cpu.status & DemoNES.ZERO) != 0);
@@ -247,7 +247,7 @@ public class DemoNESTest {
         });
         cpu.reset();
         cpu.registerA = 0x42;  // set AFTER reset
-        cpu.run();
+        cpu.step();
 
         int valueOnStack = cpu.memRead(0x0100 + cpu.stackPointer + 1);
         assertEquals(0x42, valueOnStack);
@@ -263,7 +263,7 @@ public class DemoNESTest {
         });
         cpu.reset();
         cpu.status = 0x42;  // set AFTER reset
-        cpu.run();
+        cpu.step();
 
         int valueOnStack = cpu.memRead(0x0100 + cpu.stackPointer + 1);
         assertEquals(0x42 | DemoNES.BREAK | DemoNES.BREAK2, valueOnStack);

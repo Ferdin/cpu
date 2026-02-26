@@ -16,7 +16,7 @@ public class DemoNES {
         public int status;
 
         // Cycle tracking
-        private int cycles;         // Total cycles elapsed
+        private int cycles = 0;         // Total cycles elapsed
         private int stallCycles;    // Cycles to stall (DMA, etc.)
 
         // Program Counter (16-bit)
@@ -53,6 +53,29 @@ public class DemoNES {
             INDIRECT_X,
             INDIRECT_Y,
             NONE_ADDRESSING
+        }
+
+        public int getStatus() {
+            return status;
+        }
+        public int getCycles(){
+            return cycles;
+        }
+
+        public int getProgramCounter() {
+            return programCounter;
+        }
+
+        public int getRegisterA() {
+            return registerA;
+        }
+
+        public int getRegisterX() {
+            return registerX;
+        }   
+
+        public int getStackPointer() {
+            return stackPointer;
         }
 
         private static final int[] CYCLES = new int[256];  // Placeholder for cycle counts of each opcode
@@ -339,74 +362,98 @@ public class DemoNES {
         
         private int getOperandAddress(AddressingMode mode) {
             switch (mode) {
-                case IMMEDIATE:
-                    return programCounter;
-                    
-                case ZERO_PAGE:
-                    return memRead(programCounter) & 0xFF;
-                    
-                case ABSOLUTE:
-                    return memReadU16(programCounter);
-                    
+
+                case IMMEDIATE: {
+                    int addr = programCounter;
+                    programCounter++;
+                    return addr;
+                }
+
+                case ZERO_PAGE: {
+                    int addr = memRead(programCounter) & 0xFF;
+                    programCounter++;
+                    return addr;
+                }
+
+                case ABSOLUTE: {
+                    int addr = memReadU16(programCounter);
+                    programCounter += 2;
+                    return addr;
+                }
+
                 case ZERO_PAGE_X: {
                     int pos = memRead(programCounter) & 0xFF;
-                    int addr = (pos + registerX) & 0xFF;  // Wrapping add, keep in zero page
-                    return addr;
+                    programCounter++;
+                    return (pos + registerX) & 0xFF;
                 }
-                
+
                 case ZERO_PAGE_Y: {
                     int pos = memRead(programCounter) & 0xFF;
-                    int addr = (pos + registerY) & 0xFF;  // Wrapping add, keep in zero page
-                    return addr;
+                    programCounter++;
+                    return (pos + registerY) & 0xFF;
                 }
-                
+
                 case ABSOLUTE_X: {
                     int base = memReadU16(programCounter);
-                    int addr = (base + registerX) & 0xFFFF;  // Wrapping add
+                    programCounter += 2;
+
+                    int addr = (base + registerX) & 0xFFFF;
+
                     if (pageCrossed(base, addr)) {
-                        cycles++;  // extra cycle for page crossing
+                        cycles++;
                     }
+
                     return addr;
                 }
-                
+
                 case ABSOLUTE_Y: {
                     int base = memReadU16(programCounter);
-                    int addr = (base + registerY) & 0xFFFF;  // Wrapping add
+                    programCounter += 2;
+
+                    int addr = (base + registerY) & 0xFFFF;
+
                     if (pageCrossed(base, addr)) {
-                        cycles++;  // extra cycle for page crossing
+                        cycles++;
                     }
+
                     return addr;
                 }
-                
+
                 case INDIRECT_X: {
                     int base = memRead(programCounter) & 0xFF;
-                    int ptr = (base + registerX) & 0xFF;  // Wrapping add
+                    programCounter++;
+
+                    int ptr = (base + registerX) & 0xFF;
                     int lo = memRead(ptr) & 0xFF;
-                    int hi = memRead((ptr + 1) & 0xFF) & 0xFF;  // Wrapping add
+                    int hi = memRead((ptr + 1) & 0xFF) & 0xFF;
+
                     return (hi << 8) | lo;
                 }
-                
+
                 case INDIRECT_Y: {
                     int base = memRead(programCounter) & 0xFF;
+                    programCounter++;
+
                     int lo = memRead(base) & 0xFF;
-                    int hi = memRead((base + 1) & 0xFF) & 0xFF;  // Wrapping add
+                    int hi = memRead((base + 1) & 0xFF) & 0xFF;
+
                     int derefBase = (hi << 8) | lo;
-                    int deref = (derefBase + registerY) & 0xFFFF;  // Wrapping add
-                    if (pageCrossed(derefBase, deref)) {
-                        cycles++; // extra cycle for page crossing
+                    int addr = (derefBase + registerY) & 0xFFFF;
+
+                    if (pageCrossed(derefBase, addr)) {
+                        cycles++;
                     }
-                    return deref;
+
+                    return addr;
                 }
-                
-                case NONE_ADDRESSING:
-                    throw new UnsupportedOperationException("AddressingMode " + mode + " is not supported");
-                    
+
                 default:
-                    throw new UnsupportedOperationException("Unknown addressing mode: " + mode);
+                    throw new UnsupportedOperationException("Unsupported addressing mode");
             }
         }
+
         public DemoNES() {
-            this.memory = new byte[0xFFFF];
+            this.memory = new byte[0x10000];
             reset();
         }
 
@@ -433,15 +480,15 @@ public class DemoNES {
         public void loadAndRun(int[] program) {
             load(program);
             reset();
-            run();
+            step();
         }
 
         public void load(int[] program) {
             // Copy program into memory starting at 0x8000
             for (int i = 0; i < program.length; i++) {
-                memory[0x8000 + i] = (byte)(program[i] & 0xFF);
+                memory[0x0600 + i] = (byte)(program[i] & 0xFF);
             }
-            memWriteU16(0xFFFC, 0x8000);
+            memWriteU16(0xFFFC, 0x0600);
         }
 
         private int memReadU16(int pos) {
@@ -519,15 +566,14 @@ public class DemoNES {
         }
 
         public void tsx(){
-            stackPointer = registerX;
+            registerX = stackPointer;
             update_zero_and_negative_flags(stackPointer);
         }
 
         public void pla(){
             // Pull from stack
-            int addr = 0x0100 + (stackPointer & 0xFF);
-            registerA = memRead(addr) & 0xFF;
-            stackPointer = (stackPointer + 1) & 0xFF; // Increment stack pointer
+            stackPointer = (stackPointer + 1) & 0xFF;  // increment first
+            registerA = memRead(0x0100 + stackPointer) & 0xFF;
             update_zero_and_negative_flags(registerA);
         }
 
@@ -583,7 +629,7 @@ public class DemoNES {
 
                 int oldA = registerA;   // Save original A
 
-                int result = oldA + value + (carryFlag ? 1 : 0);
+                int result = oldA + value + ((status & CARRY) != 0 ? 1 : 0);
 
                 updateCarryFlag(result);
 
@@ -823,7 +869,7 @@ public class DemoNES {
 
         private void stackPush(int value) {
             memWrite(0x0100 + stackPointer, (byte)(value & 0xFF));
-            stackPointer--;
+            stackPointer = (stackPointer - 1) & 0xFF;
         }
 
         private void stackPushU16(int value) {
@@ -835,8 +881,8 @@ public class DemoNES {
         }
 
         private int stackPop() {
-            stackPointer++;
-            return memRead(0x0100 + stackPointer);
+            stackPointer = (stackPointer + 1) & 0xFF;
+            return memRead(0x0100 + stackPointer) & 0xFF;
         }
 
         private int stackPopU16() {
@@ -848,11 +894,8 @@ public class DemoNES {
 
         public void jsr() {
             int targetAddr = memReadU16(programCounter);
-
             int returnAddr = programCounter + 1;
-
             stackPushU16(returnAddr);
-
             programCounter = targetAddr;
         }
 
@@ -1031,147 +1074,127 @@ public class DemoNES {
             status |= INTERRUPT_DISABLE;
         }
 
-        public void run() {
-            runWithCallback(cpu -> {});
-        }
+        // public void run() {
+        //     runWithCallback(cpu -> {});
+        // }
 
-        public void runWithCallback(CpuCallback callback) {
+        public void step(){
             
-            while(true){
+            // while(true){
                 // Call callback before each instruction
-                callback.execute(this);
+                // callback.execute(this);
 
                 // Read opcode (convert signed byte to unsigned)
-                int opcode = memRead(programCounter) & 0xFF;
+                int opcode = memRead(programCounter++) & 0xFF;
 
-                // Increment program counter
-                programCounter++;
+                cycles += CYCLES[opcode];
 
                 switch(opcode){
                     case 0xA9: {
                         //LDA - Immediate mode
                         lda(AddressingMode.IMMEDIATE);
-                        programCounter++;
                         break;
                     }
                     case 0xA5: {
                         // LDA - Zero Page
                         lda(AddressingMode.ZERO_PAGE);
-                        programCounter++;
                         break;
                     }
                     case 0xAD: {
                         // LDA - Absolute
                         lda(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
                         break;
                     }
                     case 0xB5: {
                         // LDA - Zero Page,X
                         lda(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
                         break;
                     }
                     case 0xBD: {
                         // LDA - Absolute,X
                         lda(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
                         break;
                     }
                     case 0xB9: {
                         // LDA - Absolute,Y
                         lda(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
                         break;
                     }
                     case 0xA1: {
                         // LDA - Indirect,X
                         lda(AddressingMode.INDIRECT_X);
-                        programCounter++;
                         break;
                     }
                     case 0xB1: {
                         // LDA - Indirect,Y
                         lda(AddressingMode.INDIRECT_Y);
-                        programCounter++;
                         break;
                     }
                     case 0x85: {
                         // STA - Zero Page
                         sta(AddressingMode.ZERO_PAGE);
-                        programCounter++;
                         break;
                     }
                     case 0x95: {
                         // STA - Zero Page,X
                         sta(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
                         break;
                     }
                     case 0x8D: {
                         // STA - Absolute
                         sta(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
                         break;
                     }
                     case 0x9D: {
                         // STA - Absolute,X
                         sta(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
                         break;
                     }
                     case 0x99: {
                         // STA - Absolute,Y
                         sta(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
                         break;
                     }
                     case 0x81: {
                         // STA - Indirect,X
                         sta(AddressingMode.INDIRECT_X);
-                        programCounter++;
                         break;
                     }
                     case 0x91: {
                         // STA - Indirect,Y
                         sta(AddressingMode.INDIRECT_Y);
-                        programCounter++;
                         break;
                     }
                     case 0x86: {
                         // STX - Zero Page
                         stx(AddressingMode.ZERO_PAGE);
-                        programCounter++;
                         break;
                     }
                     case 0x96: {
                         // STX - Zero Page,Y
-                        stx(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        stx(AddressingMode.ZERO_PAGE_Y);
                         break;
                     }
                     case 0x8E: {
                         // STX - Absolute
                         stx(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
                         break;
                     }
                     case 0x84: {
                         // STY - Zero Page
                         sty(AddressingMode.ZERO_PAGE);
-                        programCounter++;
                         break;
                     }
                     case 0x94: {
                         // STY - Zero Page,X
                         sty(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x8C: {
                         // STY - Absolute
                         sty(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xAA: {
@@ -1198,73 +1221,73 @@ public class DemoNES {
                     case 0xE6: {
                         // INC - Zero Page
                         inc(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xF6: {
                         // INC - Zero Page,X
                         inc(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xEE: {
                         // INC - Absolute
                         inc(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xFE: {
                         // INC - Absolute,X
                         inc(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x29: {
                         // AND - Immediate
                         and(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x25: {
                         // AND - Zero Page
                         and(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x35: {
                         // AND - Zero Page,X
                         and(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x2D: {
                         // AND - Absolute
                         and(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x3D: {
                         // AND - Absolute,X
                         and(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x39: {
                         // AND - Absolute,Y
                         and(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x21: {
                         // AND - Indirect,X
                         and(AddressingMode.INDIRECT_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x31: {
                         // AND - Indirect,Y
                         and(AddressingMode.INDIRECT_Y);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x98: {
@@ -1290,157 +1313,157 @@ public class DemoNES {
                     case 0x09: {
                         // ORA - Immediate
                         ora(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x05: {
                         // ORA - Zero Page
                         ora(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }   
                     case 0x15: {
                         // ORA - Zero Page,X
                         ora(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x0D: {
                         // ORA - Absolute
                         ora(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x1D: {
                         // ORA - Absolute,X
                         ora(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }   
                     case 0x19: {
                         // ORA - Absolute,Y
                         ora(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x01: {
                         // ORA - Indirect,X
                         ora(AddressingMode.INDIRECT_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x11: {
                         // ORA - Indirect,Y
                         ora(AddressingMode.INDIRECT_Y);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xA2: {
                         // LDX - Immediate
                         ldx(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xA6: {
                         // LDX - Zero Page
                         ldx(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }   
                     case 0xB6: {
                         // LDX - Zero Page,Y
                         ldx(AddressingMode.ZERO_PAGE_Y);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xAE: {
                         // LDX - Absolute
                         ldx(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xBE: {
                         // LDX - Absolute,Y
                         ldx(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xA0: {
                         // LDY - Immediate
                         ldy(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xA4: {
                         // LDY - Zero Page
                         ldy(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xB4: {
                         // LDY - Zero Page,X
                         ldy(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xAC: {
                         // LDY - Absolute
                         ldy(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xBC: {
                         // LDY - Absolute,X
                         ldy(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x49: {
                         // EOR - Immediate
                         eor(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x45: {
                         // EOR - Zero Page
                         eor(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x55: {
                         // EOR - Zero Page,X
                         eor(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x4D: {
                         // EOR - Absolute
                         eor(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x5D: {
                         // EOR - Absolute,X
                         eor(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x59: {
                         // EOR - Absolute,Y
                         eor(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x41: {
                         // EOR - Indirect,X
                         eor(AddressingMode.INDIRECT_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x51: {
                         // EOR - Indirect,Y
                         eor(AddressingMode.INDIRECT_Y);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xCA: {
@@ -1461,49 +1484,49 @@ public class DemoNES {
                     case 0x69: {
                         // ADC - Immediate
                         adc(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x65: {
                         // ADC - Zero Page
                         adc(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x75: {
                         // ADC - Zero Page,X
                         adc(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x6D: {
                         // ADC - Absolute
                         adc(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x7D: {
                         // ADC - Absolute,X
                         adc(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x79: {
                         // ADC - Absolute,Y
                         adc(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x61: {
                         // ADC - Indirect,X
                         adc(AddressingMode.INDIRECT_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x71: {
                         // ADC - Indirect,Y
                         adc(AddressingMode.INDIRECT_Y);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x0A: {
@@ -1514,25 +1537,25 @@ public class DemoNES {
                     case 0x06: {
                         // ASL - Zero Page
                         asl(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x16: {
                         // ASL - Zero Page,X
                         asl(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x0E: {
                         // ASL - Absolute
                         asl(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x1E: {
                         // ASL - Absolute,X
                         asl(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x90: {
@@ -1558,13 +1581,13 @@ public class DemoNES {
                     case 0x24: {
                         // BIT - Test Bits in Memory with Accumulator
                         bit(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x2C: {
                         // BIT - Absolute
                         bit(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x30: {
@@ -1615,109 +1638,109 @@ public class DemoNES {
                     case 0xc9: {
                         // CMP - Compare
                         cmp(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xC5: {
                         // CMP - Zero Page
                         cmp(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xD5: {
                         // CMP - Zero Page,X
                         cmp(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xCD: {
                         // CMP - Absolute
                         cmp(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xDD: {
                         // CMP - Absolute,X
                         cmp(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xD9: {
                         // CMP - Absolute,Y
                         cmp(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xC1: {
                         // CMP - Indirect,X
                         cmp(AddressingMode.INDIRECT_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xD1: {
                         // CMP - Indirect,Y
                         cmp(AddressingMode.INDIRECT_Y);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xE0: {
                         // CPX - Compare X Register
                         cpx(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xE4: {
                         // CPX - Zero Page
                         cpx(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }   
                     case 0xEC: {
                         // CPX - Absolute
                         cpx(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xC0: {
                         // CPY - Compare Y Register
                         cpy(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xC4: {
                         // CPY - Zero Page
                         cpy(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xCC: {
                         // CPY - Absolute
                         cpy(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xC6: {
                         // DEC - Zero Page
                         dec(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xD6: {
                         // DEC - Zero Page,X
                         dec(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xCE: {
                         // DEC - Absolute
                         dec(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xDE: {
                         // DEC - Absolute,X
                         dec(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x6C: {
@@ -1744,25 +1767,25 @@ public class DemoNES {
                     case 0x46: {
                         // LSR - Zero Page
                         lsr(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x56: {
                         // LSR - Zero Page,X
                         lsr(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x4E: {
                         // LSR - Absolute
                         lsr(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x5E: {
                         // LSR - Absolute,X
                         lsr(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x48: {
@@ -1788,25 +1811,25 @@ public class DemoNES {
                     case 0x26: {
                         // ROL - Zero Page
                         rol(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x36: {
                         // ROL - Zero Page,X
                         rol(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x2E: {
                         // ROL - Absolute
                         rol(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x3E: {
                         // ROL - Absolute,X
                         rol(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x6A: {
@@ -1817,73 +1840,73 @@ public class DemoNES {
                     case 0x66: {
                         // ROR - Zero Page
                         ror(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x76: {
                         // ROR - Zero Page,X
                         ror(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0x6E: {
                         // ROR - Absolute
                         ror(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0x7E: {
                         // ROR - Absolute,X
                         ror(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xE9: {
                         // SBC - Immediate
                         sbc(AddressingMode.IMMEDIATE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xE5: {
                         // SBC - Zero Page
                         sbc(AddressingMode.ZERO_PAGE);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xF5: {
                         // SBC - Zero Page,X
                         sbc(AddressingMode.ZERO_PAGE_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xED: {
                         // SBC - Absolute
                         sbc(AddressingMode.ABSOLUTE);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xFD: {
                         // SBC - Absolute,X
                         sbc(AddressingMode.ABSOLUTE_X);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xF9: {
                         // SBC - Absolute,Y
                         sbc(AddressingMode.ABSOLUTE_Y);
-                        programCounter += 2;
+                        
                         break;
                     }
                     case 0xE1: {
                         // SBC - Indirect,X
                         sbc(AddressingMode.INDIRECT_X);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xF1: {
                         // SBC - Indirect,Y
                         sbc(AddressingMode.INDIRECT_Y);
-                        programCounter++;
+                        
                         break;
                     }
                     case 0xF8: {
@@ -1906,10 +1929,11 @@ public class DemoNES {
                         break;
                     case 0x00:
                         // BRK - Break (for this demo, we'll just stop execution)
+                        programCounter = memReadU16(0xFFFE); // IRQ/BRK vector
                         return;    
                     default:
-                        throw new UnsupportedOperationException("Opcode not implemented yet.");
+                        throw new UnsupportedOperationException("Opcode " + opcode + " not implemented yet.");
                 }
-            }
+            //}
         }
 }
