@@ -78,7 +78,7 @@ public class DemoNES {
             return stackPointer;
         }
 
-        private static final int[] CYCLES = new int[256];  // Placeholder for cycle counts of each opcode
+        public static final int[] CYCLES = new int[256];  // Placeholder for cycle counts of each opcode
 
         static {
             // ADC
@@ -345,6 +345,9 @@ public class DemoNES {
             CYCLES[0x98] = 2;
         }
 
+        public int getCyclesForOpcode(int opcode) {
+            return CYCLES[opcode];
+        }
         // Called once per CPU cycle from the main loop
         public void tick() {
             if (stallCycles > 0) {
@@ -1929,7 +1932,7 @@ public class DemoNES {
                         break;
                     case 0x00:
                         // BRK - Break (for this demo, we'll just stop execution)
-                        programCounter = memReadU16(0xFFFE); // IRQ/BRK vector
+                        // programCounter = memReadU16(0xFFFE); // IRQ/BRK vector
                         return;    
                     default:
                         throw new UnsupportedOperationException("Opcode " + opcode + " not implemented yet.");

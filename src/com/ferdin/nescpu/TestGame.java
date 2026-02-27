@@ -35,15 +35,20 @@ public class TestGame extends JPanel implements KeyListener {
         g.drawImage(screen, 0, 0, SCREEN_WIDTH * SCALE, SCREEN_HEIGHT * SCALE, null);
     }
 
-    private void updateScreen() {
+    public boolean updateScreen() {
+        boolean changed = false;
         for (int addr = 0x0200; addr < 0x0600; addr++) {
             int colorIdx = nes.memRead(addr) & 0xFF;
             int rgb = color(colorIdx);
             int pixel = addr - 0x0200;
             int x = pixel % SCREEN_WIDTH;
             int y = pixel / SCREEN_WIDTH;
-            screen.setRGB(x, y, rgb);
+            if (screen.getRGB(x, y) != rgb) {
+                screen.setRGB(x, y, rgb);
+                changed = true;
+            }
         }
+        return changed;
     }
 
     private int color(int value) {
@@ -62,7 +67,6 @@ public class TestGame extends JPanel implements KeyListener {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        System.out.println("Key pressed: " + e.getKeyCode());
         switch (e.getKeyCode()) {
             case KeyEvent.VK_W: currentInput = (byte)0x77; break;
             case KeyEvent.VK_S: currentInput = (byte)0x73; break;
@@ -117,30 +121,25 @@ public class TestGame extends JPanel implements KeyListener {
         panel.requestFocusInWindow();
 
         // Game loop using Swing Timer
-        Timer timer = new Timer(1000 / FPS, e -> {
-            if (panel.currentInput != 0) {
-                nes.memWrite(0xFF, panel.currentInput);
-            }
-        
-        System.out.printf("currentInput: 0x%02X  0xFF before loop: 0x%02X%n", 
-            panel.currentInput & 0xFF, nes.memRead(0xFF) & 0xFF);
-            // Run CPU for one frame
-            int cyclesThisFrame = 0;
-            while (cyclesThisFrame < CYCLES_PER_FRAME) {
+        new Thread(() -> {
+            while (true) {
                 int op = nes.memRead(nes.getProgramCounter()) & 0xFF;
                 if (op == 0x00) break;
 
-                int before = nes.getCycles();
-                nes.step();
-                cyclesThisFrame += nes.getCycles() - before;
+                nes.memWrite(0xFF, panel.currentInput);
                 nes.memWrite(0xFE, (byte)(rng.nextInt(15) + 1));
-                if (panel.currentInput != 0) nes.memWrite(0xFF, panel.currentInput);
-            }
 
-            // Update display
-            panel.updateScreen();
-            panel.repaint();
-        });
-        timer.start();
+                nes.step();
+
+                if (panel.updateScreen()) {
+                    SwingUtilities.invokeLater(panel::repaint);
+                }
+                try {
+                    Thread.sleep(0, 7_000);
+                } catch (InterruptedException ex) {
+                    break;
+                }
+            }
+        }).start();
     }
 }
