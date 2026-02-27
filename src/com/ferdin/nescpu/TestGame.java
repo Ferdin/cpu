@@ -122,6 +122,8 @@ public class TestGame extends JPanel implements KeyListener {
 
         // Game loop using Swing Timer
         new Thread(() -> {
+            long lastRender = System.nanoTime();
+
             while (true) {
                 int op = nes.memRead(nes.getProgramCounter()) & 0xFF;
                 if (op == 0x00) break;
@@ -131,11 +133,15 @@ public class TestGame extends JPanel implements KeyListener {
 
                 nes.step();
 
-                if (panel.updateScreen()) {
+                long now = System.nanoTime();
+                if (now - lastRender >= 16_666_666) { // 60 FPS
+                    panel.updateScreen();
                     SwingUtilities.invokeLater(panel::repaint);
+                    lastRender = now;
                 }
+
                 try {
-                    Thread.sleep(0, 7_000);
+                    Thread.sleep(0, 700); // tiny sleep to throttle CPU
                 } catch (InterruptedException ex) {
                     break;
                 }

@@ -616,6 +616,29 @@ public class DemoNES {
             update_zero_and_negative_flags(registerA);
         }
 
+        private int brk() {
+
+            // BRK acts like a 2-byte instruction
+            programCounter++;
+
+            // Push PC to stack
+            stackPushU16(programCounter);
+
+            // Push status with B flag set and unused bit set
+            int statusToPush = status | BREAK | BREAK2;
+            stackPush((byte)(statusToPush & 0xFF));
+
+            // Set Interrupt Disable flag
+            status |= INTERRUPT_DISABLE;
+
+            // Load IRQ/BRK vector at $FFFE
+            int low = memRead(0xFFFE) & 0xFF;
+            int high = memRead(0xFFFF) & 0xFF;
+            programCounter = (high << 8) | low;
+
+            return 7;
+        }
+
         public void dex(){
             registerX = (registerX - 1) & 0xFF;
             update_zero_and_negative_flags(registerX);
@@ -1081,7 +1104,7 @@ public class DemoNES {
         //     runWithCallback(cpu -> {});
         // }
 
-        public void step(){
+        public int step(){
             
             // while(true){
                 // Call callback before each instruction
@@ -1090,7 +1113,8 @@ public class DemoNES {
                 // Read opcode (convert signed byte to unsigned)
                 int opcode = memRead(programCounter++) & 0xFF;
 
-                cycles += CYCLES[opcode];
+                int baseCycles = CYCLES[opcode];
+                int extraCyclesBefore = cycles;
 
                 switch(opcode){
                     case 0xA9: {
@@ -1933,10 +1957,12 @@ public class DemoNES {
                     case 0x00:
                         // BRK - Break (for this demo, we'll just stop execution)
                         // programCounter = memReadU16(0xFFFE); // IRQ/BRK vector
-                        return;    
+                        brk();    
                     default:
                         throw new UnsupportedOperationException("Opcode " + opcode + " not implemented yet.");
                 }
+            int extraCycles = cycles - extraCyclesBefore;
+            return baseCycles + extraCycles;    
             //}
         }
 }
