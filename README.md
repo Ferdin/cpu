@@ -138,5 +138,8 @@ Loads the program
 Resets the CPU (which sets the program counter to 0x8000)
 Starts execution
 
-Yet to implement
-BRK, ROR, RTI, SBC, SED, SEI
+Cycles - All done accordingly
+
+Addressing modes - All done.
+
+PPU - Yet to implement.

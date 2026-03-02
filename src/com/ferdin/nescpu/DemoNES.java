@@ -1,6 +1,6 @@
 package com.ferdin.nescpu;
 
-public class DemoNES {
+public class DemoNES implements Mem {
 
     @FunctionalInterface
     public interface CpuCallback {
@@ -26,8 +26,11 @@ public class DemoNES {
         public int stack = 0x0100;
         public int stack_reset = 0xFD;
 
+        // Bus
+        private final Bus bus;
+
         // 64KB Memory
-        private byte[] memory;
+        //private byte[] memory;
 
         // Flags
         private boolean carryFlag = false;
@@ -455,8 +458,9 @@ public class DemoNES {
             }
         }
 
-        public DemoNES() {
-            this.memory = new byte[0x10000];
+        public DemoNES(Bus bus) {
+            this.bus = bus;
+            //this.memory = new byte[0x10000];
             reset();
         }
 
@@ -469,43 +473,52 @@ public class DemoNES {
             programCounter = memReadU16(0xFFFC); // Reset vector
         }
 
-         // Equivalent to Rust’s mem_read
+        @Override
         public int memRead(int addr) {
-            return memory[addr & 0xFFFF] & 0xFF;
+            // return memory[addr & 0xFFFF] & 0xFF;
+            return bus.memRead(addr);
         }
 
-        // Equivalent to Rust’s mem_write
-        public void memWrite(int addr, byte data) {
-            memory[addr & 0xFFFF] = data;
+        @Override
+        public void memWrite(int addr, int data) {
+            bus.memWrite(addr, data);
+        }
+
+        @Override
+        public int memReadU16(int pos) {
+            return bus.memReadU16(pos);
+        }
+
+        @Override
+        public void memWriteU16(int pos, int data) {
+            bus.memWriteU16(pos, data);
         }
 
         // Loads program into memory at a default start address
         public void loadAndRun(int[] program) {
             load(program);
             reset();
-            step();
+            // Keep stepping until BRK (opcode 0x00)
+            boolean running = true;
+            while(running) {
+                int opcode = memRead(programCounter) & 0xFF;
+                if(opcode == 0x00) {  // BRK
+                    step();           // execute BRK
+                    running = false;
+                } else {
+                    step();
+                }
+            }
         }
 
         public void load(int[] program) {
-            // Copy program into memory starting at 0x8000
             for (int i = 0; i < program.length; i++) {
-                memory[0x0600 + i] = (byte)(program[i] & 0xFF);
+                memWrite(0x0000 + i, program[i]);
             }
-            memWriteU16(0xFFFC, 0x0600);
+            memWriteU16(0xFFFC, 0x0000);
         }
 
-        private int memReadU16(int pos) {
-            int lo = memRead(pos) & 0xFF;  // Treat as unsigned byte
-            int hi = memRead(pos + 1) & 0xFF;  // Treat as unsigned byte
-            return (hi << 8) | lo;
-        }
-
-        public void memWriteU16(int pos, int data) {
-            byte hi = (byte)((data >> 8) & 0xFF);
-            byte lo = (byte)(data & 0xFF);
-            memWrite(pos, lo);
-            memWrite(pos + 1, hi);
-        }
+        
 
         public void lda(AddressingMode mode){
             int addr = getOperandAddress(mode);
@@ -1957,7 +1970,8 @@ public class DemoNES {
                     case 0x00:
                         // BRK - Break (for this demo, we'll just stop execution)
                         // programCounter = memReadU16(0xFFFE); // IRQ/BRK vector
-                        brk();    
+                        brk();  
+                        break;  
                     default:
                         throw new UnsupportedOperationException("Opcode " + opcode + " not implemented yet.");
                 }

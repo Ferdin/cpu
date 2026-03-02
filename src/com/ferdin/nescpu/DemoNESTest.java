@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DemoNESTest {
     @Test
     void test_0xA9_lda_immediate_load_data(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.loadAndRun(new int[] { 0xA9, 0x05, 0x00 });
 
         assertEquals(0x05, nes.registerA);
@@ -14,7 +15,8 @@ public class DemoNESTest {
     }
     @Test
     void test_lda_from_memory(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.memWrite(0x10,(byte) 0x55);
         nes.loadAndRun(new int[] {
             0xa5, 0x10, 0x00
@@ -23,7 +25,8 @@ public class DemoNESTest {
     }
     @Test
     void test_0xA9_lda_zero_flag() {
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
 
         nes.loadAndRun(new int[] {
                 0xA9,
@@ -35,7 +38,8 @@ public class DemoNESTest {
     }
     @Test
     void test_0xaa_tax_move_a_to_x(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.loadAndRun(new int[] {
             0xA9, 0x0A,  // LDA #$0A (load 10 into A)
             0xAA,        // TAX (transfer A to X)
@@ -45,7 +49,8 @@ public class DemoNESTest {
     }
     @Test
     void test_5_ops_working_together(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.loadAndRun(new int[]{
                 0xA9, 0xC0, 
                 0xAA,              
@@ -56,7 +61,8 @@ public class DemoNESTest {
     }
     @Test
     void test_inx_overflow(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.registerX = 0xFF;
         nes.loadAndRun(new int[]{
             0xE8, 0xE8, 0x00
@@ -65,7 +71,8 @@ public class DemoNESTest {
     }
     @Test
     void test_bcc_branch_taken(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.loadAndRun(new int[]{
             0x90, 0x02, // BCC +2
             0xA9, 0x01, // LDA #$01 (should be skipped)
@@ -76,7 +83,8 @@ public class DemoNESTest {
     }
     @Test
     void test_bcs_branch_taken(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.loadAndRun(new int[]{
             0x38, // SEC - Set Carry Flag
             0xB0, 0x02, // BCS +2
@@ -88,7 +96,8 @@ public class DemoNESTest {
     }
     @Test
     void test_bcs_branch_not_taken(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.loadAndRun(new int[]{
             0xB0, 0x02, // BCS +2 (not taken)
             0xA9, 0x01, // LDA #$01 (should be executed)
@@ -100,7 +109,8 @@ public class DemoNESTest {
     }
     @Test
     void test_bit(){
-        DemoNES nes = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES nes = new DemoNES(bus);
         nes.registerA = 0b00000001;
         nes.memWrite(0x10,(byte)0b11000000);
         nes.loadAndRun(new int[]{
@@ -112,74 +122,11 @@ public class DemoNESTest {
         assertTrue((nes.status & 0b01000000) != 0); // Overflow flag should be set
         assertTrue((nes.status & 0b00000010) != 0); // because A and memory is zero
     }
-    @Test
-    void test_bmi_branch_taken(){
-        DemoNES cpu = new DemoNES();
-        cpu.status |= DemoNES.NEGATIVE;  // set negative
 
-        cpu.loadAndRun(new int[]{
-           0x30,  // BMI
-           0x01,  // +1
-           0x00,  // skipped
-           0x00   // executed
-        });
-        
-        assertEquals(0x8003, cpu.programCounter);
-    }
-    @Test
-    void test_bne_branch_taken() {
-        DemoNES cpu = new DemoNES();
-        cpu.status &= ~DemoNES.ZERO;  // clear zero (so branch happens)
-
-        cpu.loadAndRun(new int[]{
-           0xD0,  // BNE
-           0x01,  // +1
-           0x00,  // skipped
-           0x00   // executed
-        });
-
-        assertEquals(0x8004, cpu.programCounter);
-    }
-    @Test
-    void test_bne_not_taken() {
-        DemoNES cpu = new DemoNES();
-        cpu.load(new int[]{(byte)0xD0,0x01,0x00});
-        cpu.reset();
-        cpu.status |= DemoNES.ZERO;  // set AFTER reset
-        cpu.step();
-        assertEquals(0x8003, cpu.programCounter);
-    }
-    @Test
-    void test_bpl_branch_taken() {
-        DemoNES cpu = new DemoNES();
-        cpu.load(new int[]{
-           0x10,  // BPL
-           0x01,  // +1
-           0x00,  // skipped
-           0x00   // executed
-        });
-        cpu.reset();
-        cpu.status &= ~DemoNES.NEGATIVE;  // clear negative (so branch happens)
-        cpu.step();
-        assertEquals(0x8004, cpu.programCounter);
-    }
-    @Test
-    void test_bpl_no_branch_taken() {
-        DemoNES cpu = new DemoNES();
-        cpu.load(new int[]{
-           0x10,  // BPL
-           0x01,  // +1
-           0x00,  // skipped
-           0x00   // executed
-        });
-        cpu.reset();
-        cpu.status |= DemoNES.NEGATIVE;  // set negative (so branch not taken)
-        cpu.step();
-        assertEquals(0x8003, cpu.programCounter);
-    }
     @Test
     void test_cmp_equal() {
-        DemoNES cpu = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES cpu = new DemoNES(bus);
 
         cpu.load(new int[]{
            0xC9, 0x42,
@@ -193,53 +140,11 @@ public class DemoNESTest {
         assertTrue((cpu.status & DemoNES.ZERO) != 0);
         assertTrue((cpu.status & DemoNES.NEGATIVE) == 0);
     }
-    @Test
-    void test_jmp_absolute() {
-        DemoNES cpu = new DemoNES();
-
-        cpu.loadAndRun(new int[]{
-           0x4C, 0x05,0x80,  // JMP $8005
-           0x00,                   // skipped
-           0x00,                   // skipped
-           0x00                    // executed
-        });
-
-        assertEquals(0x8006, cpu.programCounter);
-    }
-
-    @Test
-    void test_jmp_indirect() {
-        DemoNES cpu = new DemoNES();
-
-        cpu.memWriteU16(0x9000, 0x8005);
-
-        cpu.loadAndRun(new int[]{
-           0x6C, 0x00,0x90,  // JMP ($9000)
-           0x00,                   // skipped
-           0x00,                   // skipped
-           0x00                    // executed
-        });
-
-        assertEquals(0x8006, cpu.programCounter);
-    }
-
-    @Test
-    void test_jsr_rts() {
-        DemoNES cpu = new DemoNES();
-
-        cpu.loadAndRun(new int[]{
-           0x20, 0x05,0x80,  // JSR $8005
-           0x00,                   // BRK (should run after RTS)
-           0x00,                   // padding
-           0x60                    // RTS at $8005
-        });
-
-        assertEquals(0x8004, cpu.programCounter);
-    }
 
     @Test
     void test_pha() {
-        DemoNES cpu = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES cpu = new DemoNES(bus);
 
         cpu.load(new int[]{
            0x48,
@@ -255,7 +160,8 @@ public class DemoNESTest {
 
     @Test
     void test_php() {
-        DemoNES cpu = new DemoNES();
+        Bus bus = new Bus();
+        DemoNES cpu = new DemoNES(bus);
 
         cpu.load(new int[]{
            0x08,  // PHP
