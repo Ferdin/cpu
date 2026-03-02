@@ -127,15 +127,15 @@ public class TestGame extends JPanel implements KeyListener {
             while (true) {
                 long frameStart = System.nanoTime();
 
-                // ~100 instructions per frame is a safe starting point
-                for (int i = 0; i < 100; i++) {
+                int cyclesThisFrame = 0;
+                while (cyclesThisFrame < 100) { // small batch, not full CYCLES_PER_FRAME
                     int op = nes.memRead(nes.getProgramCounter()) & 0xFF;
                     if (op == 0x00) return;
 
                     nes.memWrite(0xFF, panel.currentInput);
                     nes.memWrite(0xFE, (byte)(rng.nextInt(15) + 1));
 
-                    nes.step();
+                    cyclesThisFrame += nes.step();
                 }
 
                 panel.updateScreen();
