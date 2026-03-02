@@ -15,9 +15,9 @@ public class TestGame extends JPanel implements KeyListener {
     private static final int SCREEN_WIDTH = 32;
     private static final int SCREEN_HEIGHT = 32;
     private static final int SCALE = 10; // each NES pixel = 10x10 screen pixels
-    private static final int CPU_CLOCK = 1_790_000;
-    private static final int FPS = 60;
-    private static final int CYCLES_PER_FRAME = CPU_CLOCK / FPS;
+    // private static final int CPU_CLOCK = 1_790_000;
+    // private static final int FPS = 60;
+    // private static final int CYCLES_PER_FRAME = CPU_CLOCK / FPS;
 
     private BufferedImage screen = new BufferedImage(SCREEN_WIDTH, SCREEN_HEIGHT, BufferedImage.TYPE_INT_RGB);
     private volatile byte currentInput = 0;
@@ -122,28 +122,33 @@ public class TestGame extends JPanel implements KeyListener {
 
         // Game loop using Swing Timer
         new Thread(() -> {
-            long lastRender = System.nanoTime();
+            final long FRAME_NS = 1_000_000_000L / 60;
 
             while (true) {
-                int op = nes.memRead(nes.getProgramCounter()) & 0xFF;
-                if (op == 0x00) break;
+                long frameStart = System.nanoTime();
 
-                nes.memWrite(0xFF, panel.currentInput);
-                nes.memWrite(0xFE, (byte)(rng.nextInt(15) + 1));
+                // ~100 instructions per frame is a safe starting point
+                for (int i = 0; i < 100; i++) {
+                    int op = nes.memRead(nes.getProgramCounter()) & 0xFF;
+                    if (op == 0x00) return;
 
-                nes.step();
+                    nes.memWrite(0xFF, panel.currentInput);
+                    nes.memWrite(0xFE, (byte)(rng.nextInt(15) + 1));
 
-                long now = System.nanoTime();
-                if (now - lastRender >= 16_666_666) { // 60 FPS
-                    panel.updateScreen();
-                    SwingUtilities.invokeLater(panel::repaint);
-                    lastRender = now;
+                    nes.step();
                 }
 
-                try {
-                    Thread.sleep(0, 700); // tiny sleep to throttle CPU
-                } catch (InterruptedException ex) {
-                    break;
+                panel.updateScreen();
+                SwingUtilities.invokeLater(panel::repaint);
+
+                long elapsed = System.nanoTime() - frameStart;
+                long remaining = FRAME_NS - elapsed;
+                if (remaining > 0) {
+                    try {
+                        Thread.sleep(remaining / 1_000_000, (int)(remaining % 1_000_000));
+                    } catch (InterruptedException ex) {
+                        break;
+                    }
                 }
             }
         }).start();
