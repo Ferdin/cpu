@@ -1,11 +1,16 @@
-## Section 8 - Memory Management ⭐ (I am here!)
+## Section 8 - Memory Management
 
 Learn:
 
-How NES memory is organized
-Memory-mapped I/O
-Mirroring
-Building a proper Bus class
+✅ How NES memory is organized
+✅ Memory-mapped I/O
+✅ Mirroring
+✅ Building a proper Bus class
+
+## Section 8.1 - Test CPU with ROMS ⭐ (I am here!)
+
+Run Emulation tests with the roms available in the link below:
+https://www.nesdev.org/wiki/Emulator_tests
 
 ## Section 9 - The PPU (Graphics)
 
