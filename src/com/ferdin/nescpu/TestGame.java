@@ -126,6 +126,10 @@ public class TestGame extends JPanel implements KeyListener {
         // nes.load(game_code);
         nes.reset();
 
+        // nes.runWithCallback(c -> {
+        //     System.out.println(TraceUtil.trace(c));
+        // });
+
         // Setup Swing window
         JFrame frame = new JFrame("Snake Game");
         panel = new TestGame();

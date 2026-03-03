@@ -9,6 +9,8 @@ Learn:
 
 ## Section 8.1 - Test CPU with ROMS ⭐ (I am here!)
 
+Refactor the working CPU to follow DRY principle.
+
 Run Emulation tests with the roms available in the link below:
 https://www.nesdev.org/wiki/Emulator_tests
 

@@ -1,13 +1,13 @@
-public class AddressingModes {
-    // All the addressing modes will be defined here.
-    enum AddressingMode {
+public enum AddressingMode {
+        IMPLIED,
         IMMEDIATE,
         ZERO_PAGE,
         ZERO_PAGE_X,
+        ZERO_PAGE_Y,
         ABSOLUTE,
         ABSOLUTE_X,
         ABSOLUTE_Y,
         INDIRECT_X,
-        INDIRECT_Y
-    }
+        INDIRECT_Y,
+        NONE_ADDRESSING
 }

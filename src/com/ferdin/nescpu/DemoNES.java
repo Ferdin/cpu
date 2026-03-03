@@ -75,10 +75,44 @@ public class DemoNES implements Mem {
 
         public int getRegisterX() {
             return registerX;
-        }   
+        }
+        
+        public int getRegisterY() {
+            return registerY;
+        }
 
         public int getStackPointer() {
             return stackPointer;
+        }
+
+        public int setRegisterA(int value) {
+            registerA = value & 0xFF;
+            return registerA;
+        }
+
+        public int setRegisterX(int value) {
+            registerX = value & 0xFF;
+            return registerX;
+        }
+
+        public int setRegisterY(int value) {
+            registerY = value & 0xFF;
+            return registerY;
+        }
+
+        public int setStackPointer(int value) {
+            stackPointer = value & 0xFF;
+            return stackPointer;
+        }
+
+        public int setProgramCounter(int value) {
+            programCounter = value & 0xFFFF;
+            return programCounter;
+        }
+
+        public int setStatus(int value) {
+            status = value & 0xFF;
+            return status;
         }
 
         public static final int[] CYCLES = new int[256];  // Placeholder for cycle counts of each opcode
@@ -362,6 +396,26 @@ public class DemoNES implements Mem {
             // (handled below via step())
         }
 
+        public void runUntilBreak(java.util.function.Consumer<DemoNES> callback) {
+            while (true) {
+                if (callback != null) {
+                    callback.accept(this);
+                }
+
+                int opcode = memRead(programCounter) & 0xFF;
+
+                step();  // always execute instruction
+
+                if (opcode == 0x00) {  // BRK
+                    break;
+                }
+            }
+        }
+
+        public void runWithCallback(java.util.function.Consumer<DemoNES> callback) {
+            runUntilBreak(callback);
+        }
+
         private boolean pageCrossed(int addr1, int addr2) {
             return (addr1 & 0xFF00) != (addr2 & 0xFF00);
         }
@@ -469,7 +523,7 @@ public class DemoNES implements Mem {
             registerX = 0;
             registerY = 0;
             stackPointer = stack_reset;
-            status = 0;
+            status = 0x24;
             programCounter = memReadU16(0xFFFC); // Reset vector
         }
 
@@ -499,16 +553,17 @@ public class DemoNES implements Mem {
             load(program);
             reset();
             // Keep stepping until BRK (opcode 0x00)
-            boolean running = true;
-            while(running) {
-                int opcode = memRead(programCounter) & 0xFF;
-                if(opcode == 0x00) {  // BRK
-                    step();           // execute BRK
-                    running = false;
-                } else {
-                    step();
-                }
-            }
+            // boolean running = true;
+            // while(running) {
+            //     int opcode = memRead(programCounter) & 0xFF;
+            //     if(opcode == 0x00) {  // BRK
+            //         step();           // execute BRK
+            //         running = false;
+            //     } else {
+            //         step();
+            //     }
+            // }
+            runUntilBreak(null);
         }
 
         public void load(int[] program) {
@@ -517,8 +572,6 @@ public class DemoNES implements Mem {
             }
             memWriteU16(0xFFFC, 0x0000);
         }
-
-        
 
         public void lda(AddressingMode mode){
             int addr = getOperandAddress(mode);
