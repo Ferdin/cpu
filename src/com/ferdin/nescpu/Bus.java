@@ -40,10 +40,26 @@ public class Bus implements Mem {
     private static final int PPU_REGISTERS_MIRRORS_END = 0x3FFF;
 
     // 2KB internal RAM
-    private final int[] cpuVram = new int[2048];
+    private byte[] cpuVram;
+    private Rom rom;
 
     public Bus() {
-        // Java auto-initializes to 0
+        this.rom = null;
+        this.cpuVram = new byte[2048];
+    }
+
+    public Bus(Rom rom) {
+        this.rom = rom;
+        this.cpuVram = new byte[2048];
+    }
+
+    // Optional getters if needed
+    public byte[] getCpuVram() {
+        return cpuVram;
+    }
+
+    public Rom getRom() {
+        return rom;
     }
 
     // =========================
@@ -52,20 +68,27 @@ public class Bus implements Mem {
     @Override
     public int memRead(int addr) {
 
-        addr &= 0xFFFF; // ensure 16-bit
+        addr &= 0xFFFF;
 
         if (addr >= RAM && addr <= RAM_MIRRORS_END) {
 
-            // Mirror every 2KB
             int mirrorDownAddr = addr & 0x07FF;
             return cpuVram[mirrorDownAddr];
 
         } else if (addr >= PPU_REGISTERS && addr <= PPU_REGISTERS_MIRRORS_END) {
 
-            //int mirrorDownAddr = addr & 0x2007;
             throw new UnsupportedOperationException("PPU not supported yet");
 
-        } else {
+        } 
+        else if (addr >= 0x8000 && addr <= 0xFFFF) {
+
+            if (rom == null) {
+                return 0; // or read from RAM for test mode
+            }
+            return readPrgRom(addr);
+
+        } 
+        else {
 
             System.out.println("Ignoring mem access at " + Integer.toHexString(addr));
             return 0;
@@ -84,17 +107,37 @@ public class Bus implements Mem {
         if (addr >= RAM && addr <= RAM_MIRRORS_END) {
 
             int mirrorDownAddr = addr & 0x07FF;
-            cpuVram[mirrorDownAddr] = data;
+            cpuVram[mirrorDownAddr] = (byte)data;
 
         } else if (addr >= PPU_REGISTERS && addr <= PPU_REGISTERS_MIRRORS_END) {
 
             //int mirrorDownAddr = addr & 0x2007;
             throw new UnsupportedOperationException("PPU not supported yet");
 
+        } else if (addr >= 0x8000 && addr <= 0xFFFF) {
+             if (rom == null) {
+                return; // ignore writes in test mode
+            }
+            throw new UnsupportedOperationException(
+                "Attempt to write to Cartridge ROM space"
+            );
         } else {
+                System.out.println("Ignoring mem write-access at " + Integer.toHexString(addr));
+            }
+    }
 
-            System.out.println("Ignoring mem write-access at " + Integer.toHexString(addr));
+    private int readPrgRom(int addr) {
+
+        addr -= 0x8000; // Map CPU space to ROM space
+
+        int prgLength = rom.prgRom.length;
+
+        // If 16KB ROM, mirror it
+        if (prgLength == 0x4000 && addr >= 0x4000) {
+            addr = addr % 0x4000;
         }
+
+        return rom.prgRom[addr] & 0xFF;
     }
 
     @Override
