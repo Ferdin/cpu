@@ -99,7 +99,7 @@ public class TestGame extends JPanel implements KeyListener {
     }
     public static void main(String[] args) throws Exception {
 
-        byte[] rawRom = loadRomFile("/com/ferdin/nescpu/roms/snake.nes");
+        byte[] rawRom = loadRomFile("/main/java/resources/roms/snake.nes");
         Rom rom = new Rom(rawRom);
         Bus bus = new Bus(rom);
         cpu = new CPU(bus);
