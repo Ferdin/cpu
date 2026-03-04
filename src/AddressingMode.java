@@ -1,5 +1,7 @@
 public enum AddressingMode {
+        ACCUMULATOR,
         IMPLIED,
+        INDIRECT,
         IMMEDIATE,
         ZERO_PAGE,
         ZERO_PAGE_X,
