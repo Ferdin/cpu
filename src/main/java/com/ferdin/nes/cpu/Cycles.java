@@ -1,3 +1,4 @@
+package main.java.com.ferdin.nes.cpu;
 public class Cycles {
     public static final int[] CYCLES = new int[256];  // Placeholder for cycle counts of each opcode
 

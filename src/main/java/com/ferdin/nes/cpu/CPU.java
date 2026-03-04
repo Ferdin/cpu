@@ -1,3 +1,7 @@
+package main.java.com.ferdin.nes.cpu;
+import main.java.com.ferdin.nes.bus.Bus;
+import main.java.com.ferdin.nes.bus.Mem;
+
 public class CPU implements Mem{
 
     @FunctionalInterface

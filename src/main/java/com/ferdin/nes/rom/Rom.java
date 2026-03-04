@@ -1,3 +1,4 @@
+package main.java.com.ferdin.nes.rom;
 import java.util.Arrays;
 
 public class Rom {

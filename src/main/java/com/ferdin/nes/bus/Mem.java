@@ -1,3 +1,4 @@
+package main.java.com.ferdin.nes.bus;
 
 public interface Mem {
     int memRead(int addr);

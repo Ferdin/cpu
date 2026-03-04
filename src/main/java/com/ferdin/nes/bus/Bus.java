@@ -1,3 +1,4 @@
+package main.java.com.ferdin.nes.bus;
 //  _______________ $10000  _______________
 // | PRG-ROM       |       |               |
 // | Upper Bank    |       |               |
@@ -25,6 +26,8 @@
 // |_ _ _ _ _ _ _ _| $0100 |               |
 // | Zero Page     |       |               |
 // |_______________| $0000 |_______________|
+
+import main.java.com.ferdin.nes.rom.Rom;
 
 public class Bus implements Mem {
 

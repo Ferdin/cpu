@@ -1,3 +1,4 @@
+package main.java.com.ferdin.nes.cpu;
 import java.util.function.BiConsumer;
 
 public class Instruction {
