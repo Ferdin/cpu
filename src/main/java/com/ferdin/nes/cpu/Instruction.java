@@ -12,4 +12,25 @@ public class Instruction {
         this.mode = mode;
         this.execute = execute;
     }
+
+    public boolean showsMemoryValue() {
+        // switch(this.mnemonic) {
+        //     case "LDA": case "LDX": case "LDY":
+        //     case "STA": case "STX": case "STY":
+        //     case "ADC": case "SBC": case "AND":
+        //     case "ORA": case "EOR": case "CMP":
+        //     case "CPX": case "CPY":
+        //     case "BIT": return true;
+        //     default: return false;
+        // }
+        switch(this.mnemonic) {
+            case "LDA": case "LDX": case "LDY":
+            case "STA": case "STX": case "STY":
+            case "ADC": case "SBC": case "AND":
+            case "ORA": case "EOR": case "CMP":
+            case "CPX": case "CPY":
+            case "BIT": return true;
+            default: return false;
+        }
+    }
 }

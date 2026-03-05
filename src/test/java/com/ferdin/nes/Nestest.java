@@ -15,7 +15,7 @@ public class Nestest {
     @Test
     void test_nestest_rom() throws Exception {
 
-        byte[] rawRom = Files.readAllBytes(Paths.get("roms/nestest.nes"));
+        byte[] rawRom = Files.readAllBytes(Paths.get("C:\\Users\\fnorbert\\Documents\\Java\\CPU\\src\\main\\java\\resources\\roms\\nestest.nes"));
         Rom rom = new Rom(rawRom);
 
         Bus bus = new Bus(rom);
@@ -24,7 +24,7 @@ public class Nestest {
         cpu.reset();
         cpu.setProgramCounter(0xC000);
 
-        List<String> reference = Files.readAllLines(Paths.get("roms/nestest.log"));
+        List<String> reference = Files.readAllLines(Paths.get("C:\\Users\\fnorbert\\Documents\\Java\\CPU\\src\\main\\java\\resources\\roms\\nestest.log"));
 
         for (int i = 0; i < reference.size(); i++) {
 

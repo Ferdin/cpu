@@ -53,11 +53,15 @@ public class TraceUtil {
                 int lo = cpu.memRead(pc + 1) & 0xFF;
                 int hi = cpu.memRead(pc + 2) & 0xFF;
                 int addr = (hi << 8) | lo;
-                int value = cpu.memRead(addr) & 0xFF;
 
                 bytes.append(String.format("%02X %02X %02X", opcode, lo, hi));
-                operandText = String.format("%s $%04X = %02X",
-                        inst.mnemonic, addr, value);
+                operandText = inst.mnemonic + " $" + String.format("%04X", addr);
+
+                // Only show value for load/store/etc instructions
+                if (inst.showsMemoryValue()) {
+                    int value = cpu.memRead(addr) & 0xFF;
+                    operandText += " = " + String.format("%02X", value);
+                }
             }
 
             case ABSOLUTE_X -> {
