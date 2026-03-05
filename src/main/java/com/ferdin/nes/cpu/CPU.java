@@ -879,6 +879,423 @@ public class CPU implements Mem{
        // cycles += Cycles.CYCLES[0xEA]; // NOP opcode
     }
 
+    public void anc(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        registerA = (registerA & value) & 0xFF;
+        update_zero_and_negative_flags(registerA);
+        if ((registerA & 0x80) != 0) {
+            status |= CARRY;  // ANC also sets carry to match bit 7
+        } else {
+            status &= ~CARRY;
+        }
+
+    }
+
+    // Please add these instructions to the opcode table in the static block below
+
+    public void alr(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        // AND with accumulator
+        int andResult = registerA & value;
+
+        // Set Carry to bit 0 of AND result
+        if ((andResult & 0x01) != 0) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        // LSR the result
+        registerA = (andResult >> 1) & 0xFF; // shift right, mask to 8-bit
+
+        // Update Zero and Negative flags
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void ane(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        // Perform A & X & operand
+        registerA = registerA & registerX & value;
+
+        // Update Zero and Negative flags
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void arr(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        // Step 1: AND accumulator with operand
+        registerA = registerA & value;
+
+        // Step 2: Rotate right through carry
+        registerA = (registerA >> 1) & 0x7F;        // shift right 1
+        if ((status & CARRY) != 0) {
+            registerA |= 0x80; // insert carry into bit 7
+        }
+
+        // Step 3: Update C and V
+        if ((registerA & 0x40) != 0) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        // V = bit6 XOR bit5
+        boolean bit6 = (registerA & 0x40) != 0;
+        boolean bit5 = (registerA & 0x20) != 0;
+        if (bit6 ^ bit5) {
+            status |= OVERFLOW;
+        } else {
+            status &= ~OVERFLOW;
+        }
+
+        // Step 4: Update Zero and Negative flags
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void dcp(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        // Step 1: Decrement memory
+        int value = (memRead(addr) - 1) & 0xFF; // wrap 0x00->0xFF
+        memWrite(addr, value);
+
+        // Step 2: Compare with accumulator
+        int result = (registerA - value) & 0xFF;
+
+        // Update Carry flag
+        if (registerA >= value) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        // Update Zero flag
+        if ((result & 0xFF) == 0) {
+            status |= ZERO;
+        } else {
+            status &= ~ZERO;
+        }
+
+        // Update Negative flag
+        if ((result & 0x80) != 0) {
+            status |= NEGATIVE;
+        } else {
+            status &= ~NEGATIVE;
+        }
+    }
+
+    public void isc(AddressingMode mode) {
+        // Step 1: Increment memory at the operand address
+        int addr = getOperandAddress(mode);
+        int value = (memRead(addr) + 1) & 0xFF; // wrap 0xFF -> 0x00
+        memWrite(addr, value);
+
+        // Step 2: Perform SBC with the incremented value
+        sbc(mode); // your existing sbc() already reads from memory
+    }
+
+    public void las(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        int mem = memRead(addr);
+
+        // AND with X register
+        int tmp = mem & registerX;
+
+        // Store into A, X, S
+        registerA = tmp;
+        registerX = tmp;
+        stackPointer = tmp & 0xFF; // S is 8-bit
+
+        // Update flags
+        update_zero_and_negative_flags(tmp);
+    }
+
+    public void lax(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        // Load into A and X
+        registerA = value;
+        registerX = value;
+
+        // Update Zero and Negative flags
+        update_zero_and_negative_flags(value);
+    }
+    
+    public void lxa(AddressingMode mode) {
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        // Step 1: Load A
+        registerA = value;
+
+        // Step 2: AND with X (as most emulators do)
+        registerA &= registerX;
+
+        // Step 3: Update Zero and Negative flags
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void rla(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        int carryIn = (status & CARRY) != 0 ? 1 : 0;
+
+        // set carry from bit7
+        if ((value & 0x80) != 0) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        // rotate left
+        value = ((value << 1) | carryIn) & 0xFF;
+
+        memWrite(addr, value);
+
+        // AND with accumulator
+        registerA = registerA & value;
+
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void rra(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        int carryIn = (status & CARRY) != 0 ? 1 : 0;
+
+        // Set carry from bit0
+        if ((value & 0x01) != 0) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        // Rotate right
+        value = ((value >> 1) | (carryIn << 7)) & 0xFF;
+
+        memWrite(addr, value);
+
+        // Perform ADC with rotated value
+        int result = registerA + value + ((status & CARRY) != 0 ? 1 : 0);
+
+        // Carry flag
+        if (result > 0xFF) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        int finalResult = result & 0xFF;
+
+        // Overflow
+        if (((registerA ^ finalResult) & (value ^ finalResult) & 0x80) != 0) {
+            status |= OVERFLOW;
+        } else {
+            status &= ~OVERFLOW;
+        }
+
+        registerA = finalResult;
+
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void sax(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+
+        int value = registerA & registerX;
+
+        memWrite(addr, value);
+    }
+
+    public void sbx(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        int tmp = registerA & registerX;
+
+        int result = (tmp - value) & 0x1FF;
+
+        // Carry flag
+        if (tmp >= value) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        registerX = result & 0xFF;
+
+        update_zero_and_negative_flags(registerX);
+    }
+
+    public void sha(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+
+        int high = (addr >> 8) & 0xFF;
+
+        int value = registerA & registerX & ((high + 1) & 0xFF);
+
+        memWrite(addr, value);
+    }
+
+    public void shx(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+
+        int high = (addr >> 8) & 0xFF;
+
+        int value = registerX & ((high + 1) & 0xFF);
+
+        memWrite(addr, value);
+    }
+
+    public void shy(AddressingMode mode) {
+
+        int base = memReadU16(programCounter);
+        programCounter += 2;
+
+        int addr = base + (registerX & 0xFF);
+
+        int high = ((addr >> 8) & 0xFF) + 1;
+
+        int value = registerY & high;
+
+        memWrite(addr & 0xFFFF, value);
+    }
+
+    public void slo(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        // Carry from bit 7
+        if ((value & 0x80) != 0)
+            status |= CARRY;
+        else
+            status &= ~CARRY;
+
+        value = (value << 1) & 0xFF;
+
+        memWrite(addr, value);
+
+        registerA = registerA | value;
+
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void sre(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+
+        // Carry from bit 0
+        if ((value & 0x01) != 0)
+            status |= CARRY;
+        else
+            status &= ~CARRY;
+
+        value = (value >> 1) & 0xFF;
+
+        memWrite(addr, value);
+
+        registerA = registerA ^ value;
+
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void tas(AddressingMode mode) {
+
+        int baseAddr = memReadU16(programCounter);
+        programCounter += 2;
+
+        int addr = (baseAddr + registerY) & 0xFFFF;
+
+        int temp = registerA & registerX;
+
+        stackPointer = temp & 0xFF;
+
+        int high = (addr >> 8) & 0xFF;
+
+        int value = temp & (high + 1);
+
+        memWrite(addr, value);
+
+    }
+
+    public void usbc(AddressingMode mode) {
+
+        int addr = getOperandAddress(mode);
+        int value = memRead(addr);
+        int carryIn = (status & CARRY) != 0 ? 1 : 0;
+
+        int result = registerA + (value ^ 0xFF) + carryIn;
+
+        // Carry (set if no borrow)
+        if (result > 0xFF) {
+            status |= CARRY;
+        } else {
+            status &= ~CARRY;
+        }
+
+        int finalResult = result & 0xFF;
+
+        // Overflow
+        if (((registerA ^ finalResult) & (registerA ^ value) & 0x80) != 0) {
+            status |= OVERFLOW;
+        } else {
+            status &= ~OVERFLOW;
+        }
+
+        registerA = finalResult;
+
+        update_zero_and_negative_flags(registerA);
+    }
+
+    public void nop(AddressingMode mode) {
+        // Determine instruction length
+        int bytes = switch (mode) {
+            case IMPLIED -> 1;
+            case IMMEDIATE, ZERO_PAGE, ZERO_PAGE_X, INDIRECT_X, INDIRECT_Y -> 2;
+            case ABSOLUTE, ABSOLUTE_X, ABSOLUTE_Y -> 3;
+            default -> 1; // fallback
+        };
+
+        // Advance program counter
+        programCounter += bytes;
+
+        // Update cycles (simplified, you can add page-cross if needed)
+        cycles += switch (mode) {
+            case IMPLIED -> 2;
+            case IMMEDIATE -> 2;
+            case ZERO_PAGE -> 3;
+            case ZERO_PAGE_X -> 4;
+            case ABSOLUTE -> 4;
+            case ABSOLUTE_X -> 4; // +1 if page crossed
+            default -> 2;
+        };
+    }
+
+    public void jam() {
+        // Freeze CPU forever (throw exception or infinite loop)
+        throw new UnsupportedOperationException(
+            "CPU jammed! Instruction causes KIL/JAM. Reset required."
+        );
+    }
+
     static {
         // LDA Immediate
         OPCODES[0xA9] = new Instruction("LDA", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.lda(mode));
@@ -1182,6 +1599,12 @@ public class CPU implements Mem{
         OPCODES[0x40] = new Instruction("RTI", AddressingMode.IMPLIED, (cpu, mode) -> cpu.rti());
         // BRK
         OPCODES[0x00] = new Instruction("BRK", AddressingMode.IMPLIED, (cpu, mode) -> cpu.brk());
+        // Undocument OPCODES
+        // ANC 
+        OPCODES[0x0B] = new Instruction("ANC", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.anc(mode));
+        // ANC2
+        OPCODES[0x2B] = new Instruction("ANC", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.anc(mode));
+
     }
 
     public int step() {
