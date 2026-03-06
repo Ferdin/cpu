@@ -1298,313 +1298,459 @@ public class CPU implements Mem{
 
     static {
         // LDA Immediate
-        OPCODES[0xA9] = new Instruction("LDA", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xA9] = new Instruction("LDA", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.lda(mode));
         // LDA Zero Page
-        OPCODES[0xA5] = new Instruction("LDA", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xA5] = new Instruction("LDA", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.lda(mode));
         // LDA Absolute
-        OPCODES[0xAD] = new Instruction("LDA", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xAD] = new Instruction("LDA", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.lda(mode));
         // LDA Zero Page,X
-        OPCODES[0xB5] = new Instruction("LDA", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xB5] = new Instruction("LDA", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.lda(mode));
         // LDA Absolute,X
-        OPCODES[0xBD] = new Instruction("LDA", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xBD] = new Instruction("LDA", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.lda(mode));
         // LDA Absolute,Y
-        OPCODES[0xB9] = new Instruction("LDA", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xB9] = new Instruction("LDA", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.lda(mode));
         // LDA (Indirect,X)
-        OPCODES[0xA1] = new Instruction("LDA", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xA1] = new Instruction("LDA", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.lda(mode));
         // LDA (Indirect),Y
-        OPCODES[0xB1] = new Instruction("LDA", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.lda(mode));
+        OPCODES[0xB1] = new Instruction("LDA", 5, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.lda(mode));
         // STA Zero Page
-        OPCODES[0x85] = new Instruction("STA", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.sta(mode));
+        OPCODES[0x85] = new Instruction("STA", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.sta(mode));
         // STA Absolute
-        OPCODES[0x8D] = new Instruction("STA", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.sta(mode));
+        OPCODES[0x8D] = new Instruction("STA", 4,AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.sta(mode));
         // STA Zero Page,X
-        OPCODES[0x95] = new Instruction("STA", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.sta(mode));
+        OPCODES[0x95] = new Instruction("STA", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.sta(mode));
         // STA Absolute,X
-        OPCODES[0x9D] = new Instruction("STA", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.sta(mode));
+        OPCODES[0x9D] = new Instruction("STA", 5,AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.sta(mode));
         // STA Absolute,Y
-        OPCODES[0x99] = new Instruction("STA", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.sta(mode));
+        OPCODES[0x99] = new Instruction("STA", 5, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.sta(mode));
         // STA (Indirect,X)
-        OPCODES[0x81] = new Instruction("STA", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.sta(mode));
+        OPCODES[0x81] = new Instruction("STA", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.sta(mode));
         // STA (Indirect),Y
-        OPCODES[0x91] = new Instruction("STA", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.sta(mode));
+        OPCODES[0x91] = new Instruction("STA", 6, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.sta(mode));
         // STX Zero Page
-        OPCODES[0x86] = new Instruction("STX", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.stx(mode));
+        OPCODES[0x86] = new Instruction("STX", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.stx(mode));
         // STX Absolute
-        OPCODES[0x8E] = new Instruction("STX", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.stx(mode));
+        OPCODES[0x8E] = new Instruction("STX", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.stx(mode));
         // STX Zero Page,Y
-        OPCODES[0x96] = new Instruction("STX", AddressingMode.ZERO_PAGE_Y, (cpu, mode) -> cpu.stx(mode));
+        OPCODES[0x96] = new Instruction("STX", 4, AddressingMode.ZERO_PAGE_Y, (cpu, mode) -> cpu.stx(mode));
         // STY Zero Page
-        OPCODES[0x84] = new Instruction("STY", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.sty(mode));
+        OPCODES[0x84] = new Instruction("STY", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.sty(mode));
         // STY Absolute
-        OPCODES[0x8C] = new Instruction("STY", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.sty(mode));
+        OPCODES[0x8C] = new Instruction("STY", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.sty(mode));
         // STY Zero Page,X
-        OPCODES[0x94] = new Instruction("STY", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.sty(mode));
+        OPCODES[0x94] = new Instruction("STY", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.sty(mode));
         // TAX
-        OPCODES[0xAA] = new Instruction("TAX", AddressingMode.IMPLIED, (cpu, mode) -> cpu.tax());
+        OPCODES[0xAA] = new Instruction("TAX", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.tax());
         // TAY
-        OPCODES[0xA8] = new Instruction("TAY", AddressingMode.IMPLIED, (cpu, mode) -> cpu.tay());
+        OPCODES[0xA8] = new Instruction("TAY", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.tay());
         // INX
-        OPCODES[0xE8] = new Instruction("INX", AddressingMode.IMPLIED, (cpu, mode) -> cpu.inx());
+        OPCODES[0xE8] = new Instruction("INX", 2,AddressingMode.IMPLIED, (cpu, mode) -> cpu.inx());
         // INY
-        OPCODES[0xC8] = new Instruction("INY", AddressingMode.IMPLIED, (cpu, mode) -> cpu.iny());
+        OPCODES[0xC8] = new Instruction("INY", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.iny());
         // INC - Zero Page
-        OPCODES[0xE6] = new Instruction("INC", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.inc(mode));
+        OPCODES[0xE6] = new Instruction("INC", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.inc(mode));
         // INC - Absolute
-        OPCODES[0xEE] = new Instruction("INC", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.inc(mode));
+        OPCODES[0xEE] = new Instruction("INC", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.inc(mode));
         // INC - Zero Page,X
-        OPCODES[0xF6] = new Instruction("INC", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.inc(mode));
+        OPCODES[0xF6] = new Instruction("INC", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.inc(mode));
         // INC - Absolute,X
-        OPCODES[0xFE] = new Instruction("INC", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.inc(mode));
+        OPCODES[0xFE] = new Instruction("INC", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.inc(mode));
         // AND - Immediate
-        OPCODES[0x29] = new Instruction("AND", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x29] = new Instruction("AND", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.and(mode));
         // AND - Zero Page
-        OPCODES[0x25] = new Instruction("AND", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x25] = new Instruction("AND", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.and(mode));
         // AND - Absolute
-        OPCODES[0x2D] = new Instruction("AND", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x2D] = new Instruction("AND", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.and(mode));
         // AND - Zero Page,X
-        OPCODES[0x35] = new Instruction("AND", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x35] = new Instruction("AND", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.and(mode));
         // AND - Absolute,X
-        OPCODES[0x3D] = new Instruction("AND", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x3D] = new Instruction("AND", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.and(mode));
         // AND - Absolute,Y
-        OPCODES[0x39] = new Instruction("AND", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x39] = new Instruction("AND", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.and(mode));
         // AND - Indirect,X
-        OPCODES[0x21] = new Instruction("AND", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x21] = new Instruction("AND", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.and(mode));
         // AND - Indirect,Y
-        OPCODES[0x31] = new Instruction("AND", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.and(mode));
+        OPCODES[0x31] = new Instruction("AND", 5, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.and(mode));
         // TYA 
-        OPCODES[0x98] = new Instruction("TYA", AddressingMode.IMPLIED, (cpu, mode) -> cpu.tya());
+        OPCODES[0x98] = new Instruction("TYA", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.tya());
         // TXA
-        OPCODES[0x8A] = new Instruction("TXA", AddressingMode.IMPLIED, (cpu, mode) -> cpu.txa());
+        OPCODES[0x8A] = new Instruction("TXA", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.txa());
         // TSX
-        OPCODES[0xBA] = new Instruction("TSX", AddressingMode.IMPLIED, (cpu, mode) -> cpu.tsx());
+        OPCODES[0xBA] = new Instruction("TSX", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.tsx());
         // PLA
-        OPCODES[0x68] = new Instruction("PLA", AddressingMode.IMPLIED, (cpu, mode) -> cpu.pla());
+        OPCODES[0x68] = new Instruction("PLA", 4, AddressingMode.IMPLIED, (cpu, mode) -> cpu.pla());
         // ORA - Immediate
-        OPCODES[0x09] = new Instruction("ORA", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x09] = new Instruction("ORA", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.ora(mode));
         // ORA - Zero Page
-        OPCODES[0x05] = new Instruction("ORA", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x05] = new Instruction("ORA", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ora(mode));
         // ORA - Absolute
-        OPCODES[0x0D] = new Instruction("ORA", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x0D] = new Instruction("ORA", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ora(mode));
         // ORA - Zero Page,X
-        OPCODES[0x15] = new Instruction("ORA", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x15] = new Instruction("ORA", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.ora(mode));
         // ORA - Absolute,X
-        OPCODES[0x1D] = new Instruction("ORA", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x1D] = new Instruction("ORA", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.ora(mode));
         // ORA - Absolute,Y
-        OPCODES[0x19] = new Instruction("ORA", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x19] = new Instruction("ORA", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.ora(mode));
         // ORA - Indirect,X
-        OPCODES[0x01] = new Instruction("ORA", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x01] = new Instruction("ORA", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.ora(mode));
         // ORA - Indirect,Y
-        OPCODES[0x11] = new Instruction("ORA", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.ora(mode));
+        OPCODES[0x11] = new Instruction("ORA", 5, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.ora(mode));
         // LDX - Immediate
-        OPCODES[0xA2] = new Instruction("LDX", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.ldx(mode));
+        OPCODES[0xA2] = new Instruction("LDX", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.ldx(mode));
         // LDX - Zero Page
-        OPCODES[0xA6] = new Instruction("LDX", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ldx(mode));
+        OPCODES[0xA6] = new Instruction("LDX", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ldx(mode));
         // LDX - Absolute
-        OPCODES[0xAE] = new Instruction("LDX", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ldx(mode));
+        OPCODES[0xAE] = new Instruction("LDX", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ldx(mode));
         // LDX - Zero Page,Y
-        OPCODES[0xB6] = new Instruction("LDX", AddressingMode.ZERO_PAGE_Y, (cpu, mode) -> cpu.ldx(mode));
+        OPCODES[0xB6] = new Instruction("LDX", 4, AddressingMode.ZERO_PAGE_Y, (cpu, mode) -> cpu.ldx(mode));
         // LDX - Absolute,Y
-        OPCODES[0xBE] = new Instruction("LDX", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.ldx(mode));
+        OPCODES[0xBE] = new Instruction("LDX", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.ldx(mode));
         // LDY - Immediate
-        OPCODES[0xA0] = new Instruction("LDY", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.ldy(mode));
+        OPCODES[0xA0] = new Instruction("LDY", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.ldy(mode));
         // LDY - Zero Page
-        OPCODES[0xA4] = new Instruction("LDY", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ldy(mode));
+        OPCODES[0xA4] = new Instruction("LDY", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ldy(mode));
         // LDY - Absolute
-        OPCODES[0xAC] = new Instruction("LDY", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ldy(mode));
+        OPCODES[0xAC] = new Instruction("LDY", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ldy(mode));
         // LDY - Zero Page,X
-        OPCODES[0xB4] = new Instruction("LDY", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.ldy(mode));
+        OPCODES[0xB4] = new Instruction("LDY", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.ldy(mode));
         // LDY - Absolute,X
-        OPCODES[0xBC] = new Instruction("LDY", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.ldy(mode));
+        OPCODES[0xBC] = new Instruction("LDY", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.ldy(mode));
         // EOR - Immediate
-        OPCODES[0x49] = new Instruction("EOR", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x49] = new Instruction("EOR", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.eor(mode));
         // EOR - Zero Page
-        OPCODES[0x45] = new Instruction("EOR", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x45] = new Instruction("EOR", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.eor(mode));
         // EOR - Absolute
-        OPCODES[0x4D] = new Instruction("EOR", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x4D] = new Instruction("EOR", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.eor(mode));
         // EOR - Zero Page,X
-        OPCODES[0x55] = new Instruction("EOR", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x55] = new Instruction("EOR", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.eor(mode));
         // EOR - Absolute,X
-        OPCODES[0x5D] = new Instruction("EOR", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x5D] = new Instruction("EOR", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.eor(mode));
         // EOR - Absolute,Y
-        OPCODES[0x59] = new Instruction("EOR", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x59] = new Instruction("EOR", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.eor(mode));
         // EOR - Indirect,X
-        OPCODES[0x41] = new Instruction("EOR", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x41] = new Instruction("EOR", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.eor(mode));
         // EOR - Indirect,Y
-        OPCODES[0x51] = new Instruction("EOR", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.eor(mode));
+        OPCODES[0x51] = new Instruction("EOR", 5, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.eor(mode));
         // DEX 
-        OPCODES[0xCA] = new Instruction("DEX", AddressingMode.IMPLIED, (cpu, mode) -> cpu.dex());
+        OPCODES[0xCA] = new Instruction("DEX", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.dex());
         // DEY
-        OPCODES[0x88] = new Instruction("DEY", AddressingMode.IMPLIED, (cpu, mode) -> cpu.dey());
+        OPCODES[0x88] = new Instruction("DEY", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.dey());
         // TXS
-        OPCODES[0x9A] = new Instruction("TXS", AddressingMode.IMPLIED, (cpu, mode) -> cpu.txs());
+        OPCODES[0x9A] = new Instruction("TXS", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.txs());
         // ADC - Immediate
-        OPCODES[0x69] = new Instruction("ADC", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x69] = new Instruction("ADC", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.adc(mode));
         // ADC - Zero Page
-        OPCODES[0x65] = new Instruction("ADC", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x65] = new Instruction("ADC", 3,AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.adc(mode));
         // ADC - Absolute
-        OPCODES[0x6D] = new Instruction("ADC", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x6D] = new Instruction("ADC", 4,AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.adc(mode));
         // ADC - Zero Page,X
-        OPCODES[0x75] = new Instruction("ADC", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x75] = new Instruction("ADC", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.adc(mode));
         // ADC - Absolute,X
-        OPCODES[0x7D] = new Instruction("ADC", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x7D] = new Instruction("ADC", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.adc(mode));
         // ADC - Absolute,Y
-        OPCODES[0x79] = new Instruction("ADC", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x79] = new Instruction("ADC", 4,AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.adc(mode));
         // ADC - Indirect,X
-        OPCODES[0x61] = new Instruction("ADC", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x61] = new Instruction("ADC", 6,AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.adc(mode));
         // ADC - Indirect,Y
-        OPCODES[0x71] = new Instruction("ADC", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.adc(mode));
+        OPCODES[0x71] = new Instruction("ADC", 5,AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.adc(mode));
         // ASL Accumulator
-        OPCODES[0x0A] = new Instruction("ASL", AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.aslAccumulator());
+        OPCODES[0x0A] = new Instruction("ASL", 2,AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.aslAccumulator());
         // ASL Zero Page
-        OPCODES[0x06] = new Instruction("ASL", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.asl(mode));
+        OPCODES[0x06] = new Instruction("ASL", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.asl(mode));
         // ASL Absolute
-        OPCODES[0x0E] = new Instruction("ASL", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.asl(mode));
+        OPCODES[0x0E] = new Instruction("ASL", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.asl(mode));
         // ASL Zero Page,X
-        OPCODES[0x16] = new Instruction("ASL", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.asl(mode));
+        OPCODES[0x16] = new Instruction("ASL", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.asl(mode));
         // ASL Absolute,X
-        OPCODES[0x1E] = new Instruction("ASL", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.asl(mode));
+        OPCODES[0x1E] = new Instruction("ASL", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.asl(mode));
         // BCC 
-        OPCODES[0x90] = new Instruction("BCC", AddressingMode.IMPLIED, (cpu, mode) -> cpu.bcc());
+        OPCODES[0x90] = new Instruction("BCC", 2,AddressingMode.RELATIVE, (cpu, mode) -> cpu.bcc());
         // BCS
-        OPCODES[0xB0] = new Instruction("BCS", AddressingMode.IMPLIED, (cpu, mode) -> cpu.bcs());
+        OPCODES[0xB0] = new Instruction("BCS", 2, AddressingMode.RELATIVE, (cpu, mode) -> cpu.bcs());
         // SEC
-        OPCODES[0x38] = new Instruction("SEC", AddressingMode.IMPLIED, (cpu, mode) -> cpu.sec());
+        OPCODES[0x38] = new Instruction("SEC", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.sec());
         // BEQ
-        OPCODES[0xF0] = new Instruction("BEQ", AddressingMode.IMPLIED, (cpu, mode) -> cpu.beq());
+        OPCODES[0xF0] = new Instruction("BEQ", 2, AddressingMode.RELATIVE, (cpu, mode) -> cpu.beq());
         // BIT - Zero Page
-        OPCODES[0x24] = new Instruction("BIT", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.bit(mode));
+        OPCODES[0x24] = new Instruction("BIT", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.bit(mode));
         // BIT - Absolute
-        OPCODES[0x2C] = new Instruction("BIT", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.bit(mode));
+        OPCODES[0x2C] = new Instruction("BIT", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.bit(mode));
         // BMI
-        OPCODES[0x30] = new Instruction("BMI", AddressingMode.IMPLIED, (cpu, mode) -> cpu.bmi());
+        OPCODES[0x30] = new Instruction("BMI", 2, AddressingMode.RELATIVE, (cpu, mode) -> cpu.bmi());
         // BNE
-        OPCODES[0xD0] = new Instruction("BNE", AddressingMode.IMPLIED, (cpu, mode) -> cpu.bne());
+        OPCODES[0xD0] = new Instruction("BNE", 2, AddressingMode.RELATIVE, (cpu, mode) -> cpu.bne());
         // BPL
-        OPCODES[0x10] = new Instruction("BPL", AddressingMode.IMPLIED, (cpu, mode) -> cpu.bpl());
+        OPCODES[0x10] = new Instruction("BPL", 2, AddressingMode.RELATIVE, (cpu, mode) -> cpu.bpl());
         // BVC
-        OPCODES[0x50] = new Instruction("BVC", AddressingMode.IMPLIED, (cpu, mode) -> cpu.bvc());
+        OPCODES[0x50] = new Instruction("BVC", 2, AddressingMode.RELATIVE, (cpu, mode) -> cpu.bvc());
         // BVS
-        OPCODES[0x70] = new Instruction("BVS", AddressingMode.IMPLIED, (cpu, mode) -> cpu.bvs());
+        OPCODES[0x70] = new Instruction("BVS", 2, AddressingMode.RELATIVE, (cpu, mode) -> cpu.bvs());
         // CLC
-        OPCODES[0x18] = new Instruction("CLC", AddressingMode.IMPLIED, (cpu, mode) -> cpu.clc());
+        OPCODES[0x18] = new Instruction("CLC", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.clc());
         // CLD
-        OPCODES[0xD8] = new Instruction("CLD", AddressingMode.IMPLIED, (cpu, mode) -> cpu.cld());
+        OPCODES[0xD8] = new Instruction("CLD", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.cld());
         // CLI
-        OPCODES[0x58] = new Instruction("CLI", AddressingMode.IMPLIED, (cpu, mode) -> cpu.cli());
+        OPCODES[0x58] = new Instruction("CLI", 2,AddressingMode.IMPLIED, (cpu, mode) -> cpu.cli());
         // CLV
-        OPCODES[0xB8] = new Instruction("CLV", AddressingMode.IMPLIED, (cpu, mode) -> cpu.clv());
+        OPCODES[0xB8] = new Instruction("CLV", 2,AddressingMode.IMPLIED, (cpu, mode) -> cpu.clv());
         // CMP - Immediate
-        OPCODES[0xC9] = new Instruction("CMP", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xC9] = new Instruction("CMP", 2,AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.cmp(mode));
         // CMP - Zero Page
-        OPCODES[0xC5] = new Instruction("CMP", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xC5] = new Instruction("CMP", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.cmp(mode));
         // CMP - Absolute
-        OPCODES[0xCD] = new Instruction("CMP", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xCD] = new Instruction("CMP", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.cmp(mode));
         // CMP - Zero Page,X
-        OPCODES[0xD5] = new Instruction("CMP", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xD5] = new Instruction("CMP", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.cmp(mode));
         // CMP - Absolute,X
-        OPCODES[0xDD] = new Instruction("CMP", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xDD] = new Instruction("CMP", 4,AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.cmp(mode));
         // CMP - Absolute,Y
-        OPCODES[0xD9] = new Instruction("CMP", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xD9] = new Instruction("CMP", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.cmp(mode));
         // CMP - Indirect,X
-        OPCODES[0xC1] = new Instruction("CMP", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xC1] = new Instruction("CMP", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.cmp(mode));
         // CMP - Indirect,Y
-        OPCODES[0xD1] = new Instruction("CMP", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.cmp(mode));
+        OPCODES[0xD1] = new Instruction("CMP", 5, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.cmp(mode));
         // CPX - Immediate
-        OPCODES[0xE0] = new Instruction("CPX", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.cpx(mode));
+        OPCODES[0xE0] = new Instruction("CPX", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.cpx(mode));
         // CPX - Zero Page
-        OPCODES[0xE4] = new Instruction("CPX", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.cpx(mode));
+        OPCODES[0xE4] = new Instruction("CPX", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.cpx(mode));
         // CPX - Absolute
-        OPCODES[0xEC] = new Instruction("CPX", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.cpx(mode));
+        OPCODES[0xEC] = new Instruction("CPX", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.cpx(mode));
         // CPY - Immediate
-        OPCODES[0xC0] = new Instruction("CPY", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.cpy(mode));
+        OPCODES[0xC0] = new Instruction("CPY", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.cpy(mode));
         // CPY - Zero Page
-        OPCODES[0xC4] = new Instruction("CPY", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.cpy(mode));
+        OPCODES[0xC4] = new Instruction("CPY", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.cpy(mode));
         // CPY - Absolute
-        OPCODES[0xCC] = new Instruction("CPY", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.cpy(mode));
+        OPCODES[0xCC] = new Instruction("CPY", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.cpy(mode));
         // DEC - Zero Page
-        OPCODES[0xC6] = new Instruction("DEC", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.dec(mode));
+        OPCODES[0xC6] = new Instruction("DEC", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.dec(mode));
         // DEC - Absolute
-        OPCODES[0xCE] = new Instruction("DEC", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.dec(mode));
+        OPCODES[0xCE] = new Instruction("DEC", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.dec(mode));
         // DEC - Zero Page,X
-        OPCODES[0xD6] = new Instruction("DEC", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.dec(mode));
+        OPCODES[0xD6] = new Instruction("DEC", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.dec(mode));
         // DEC - Absolute,X
-        OPCODES[0xDE] = new Instruction("DEC", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.dec(mode));
+        OPCODES[0xDE] = new Instruction("DEC", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.dec(mode));
         // JMP Absolute
-        OPCODES[0x4C] = new Instruction("JMP", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.jmpAbsolute());
+        OPCODES[0x4C] = new Instruction("JMP", 3, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.jmpAbsolute());
         // JMP Indirect
-        OPCODES[0x6C] = new Instruction("JMP", AddressingMode.INDIRECT, (cpu, mode) -> cpu.jmpIndirect());
+        OPCODES[0x6C] = new Instruction("JMP", 5, AddressingMode.INDIRECT, (cpu, mode) -> cpu.jmpIndirect());
         // JSR
-        OPCODES[0x20] = new Instruction("JSR", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.jsr());
+        OPCODES[0x20] = new Instruction("JSR", 6,AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.jsr());
         // RTS
-        OPCODES[0x60] = new Instruction("RTS", AddressingMode.IMPLIED, (cpu, mode) -> cpu.rts());
+        OPCODES[0x60] = new Instruction("RTS", 6,AddressingMode.IMPLIED, (cpu, mode) -> cpu.rts());
         // LSR Accumulator
-        OPCODES[0x4A] = new Instruction("LSR", AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.lsrAccumulator());
+        OPCODES[0x4A] = new Instruction("LSR", 2, AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.lsrAccumulator());
         // LSR Zero Page
-        OPCODES[0x46] = new Instruction("LSR", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.lsr(mode));
+        OPCODES[0x46] = new Instruction("LSR", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.lsr(mode));
         // LSR Absolute
-        OPCODES[0x4E] = new Instruction("LSR", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.lsr(mode));
+        OPCODES[0x4E] = new Instruction("LSR", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.lsr(mode));
         // LSR Zero Page,X
-        OPCODES[0x56] = new Instruction("LSR", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.lsr(mode));
+        OPCODES[0x56] = new Instruction("LSR", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.lsr(mode));
         // LSR Absolute,X
-        OPCODES[0x5E] = new Instruction("LSR", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.lsr(mode));
+        OPCODES[0x5E] = new Instruction("LSR", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.lsr(mode));
         // PHA 
-        OPCODES[0x68] = new Instruction("PHA", AddressingMode.IMPLIED, (cpu, mode) -> cpu.pha());
+        OPCODES[0x68] = new Instruction("PHA", 3, AddressingMode.IMPLIED, (cpu, mode) -> cpu.pha());
         // PHP
-        OPCODES[0x08] = new Instruction("PHP", AddressingMode.IMPLIED, (cpu, mode) -> cpu.php());
+        OPCODES[0x08] = new Instruction("PHP", 3, AddressingMode.IMPLIED, (cpu, mode) -> cpu.php());
         // PLP
-        OPCODES[0x28] = new Instruction("PLP", AddressingMode.IMPLIED, (cpu, mode) -> cpu.plp());
+        OPCODES[0x28] = new Instruction("PLP", 4, AddressingMode.IMPLIED, (cpu, mode) -> cpu.plp());
         // ROL Accumulator
-        OPCODES[0x2A] = new Instruction("ROL", AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.rolAccumulator());
+        OPCODES[0x2A] = new Instruction("ROL", 2, AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.rolAccumulator());
         // ROL Zero Page
-        OPCODES[0x26] = new Instruction("ROL", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.rol(mode));
+        OPCODES[0x26] = new Instruction("ROL", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.rol(mode));
         // ROL Absolute
-        OPCODES[0x2E] = new Instruction("ROL", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.rol(mode));
+        OPCODES[0x2E] = new Instruction("ROL", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.rol(mode));
         // ROL Zero Page,X
-        OPCODES[0x36] = new Instruction("ROL", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.rol(mode));
+        OPCODES[0x36] = new Instruction("ROL", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.rol(mode));
         // ROL Absolute,X
-        OPCODES[0x3E] = new Instruction("ROL", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.rol(mode));
+        OPCODES[0x3E] = new Instruction("ROL", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.rol(mode));
         // ROR Accumulator
-        OPCODES[0x6A] = new Instruction("ROR", AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.rorAccumulator());
+        OPCODES[0x6A] = new Instruction("ROR", 2, AddressingMode.ACCUMULATOR, (cpu, mode) -> cpu.rorAccumulator());
         // ROR Zero Page
-        OPCODES[0x66] = new Instruction("ROR", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ror(mode));
+        OPCODES[0x66] = new Instruction("ROR", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.ror(mode));
         // ROR Absolute
-        OPCODES[0x6E] = new Instruction("ROR", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ror(mode));
+        OPCODES[0x6E] = new Instruction("ROR", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.ror(mode));
         // ROR Zero Page,X
-        OPCODES[0x76] = new Instruction("ROR", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.ror(mode));
+        OPCODES[0x76] = new Instruction("ROR", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.ror(mode));
         // ROR Absolute,X
-        OPCODES[0x7E] = new Instruction("ROR", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.ror(mode));
+        OPCODES[0x7E] = new Instruction("ROR", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.ror(mode));
         // SBC - Immediate
-        OPCODES[0xE9] = new Instruction("SBC", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xE9] = new Instruction("SBC", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.sbc(mode));
         // SBC - Zero Page
-        OPCODES[0xE5] = new Instruction("SBC", AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xE5] = new Instruction("SBC", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.sbc(mode));
         // SBC - Absolute
-        OPCODES[0xED] = new Instruction("SBC", AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xED] = new Instruction("SBC", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.sbc(mode));
         // SBC - Zero Page,X
-        OPCODES[0xF5] = new Instruction("SBC", AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xF5] = new Instruction("SBC", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.sbc(mode));
         // SBC - Absolute,X
-        OPCODES[0xFD] = new Instruction("SBC", AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xFD] = new Instruction("SBC", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.sbc(mode));
         // SBC - Absolute,Y
-        OPCODES[0xF9] = new Instruction("SBC", AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xF9] = new Instruction("SBC", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.sbc(mode));
         // SBC - Indirect,X
-        OPCODES[0xE1] = new Instruction("SBC", AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xE1] = new Instruction("SBC", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.sbc(mode));
         // SBC - Indirect,Y
-        OPCODES[0xF1] = new Instruction("SBC", AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.sbc(mode));
+        OPCODES[0xF1] = new Instruction("SBC", 5, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.sbc(mode));
         // SED
-        OPCODES[0xF8] = new Instruction("SED", AddressingMode.IMPLIED, (cpu, mode) -> cpu.sed());
+        OPCODES[0xF8] = new Instruction("SED", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.sed());
         // SEI
-        OPCODES[0x78] = new Instruction("SEI", AddressingMode.IMPLIED, (cpu, mode) -> cpu.sei());
+        OPCODES[0x78] = new Instruction("SEI", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.sei());
         // NOP
-        OPCODES[0xEA] = new Instruction("NOP", AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop());
+        OPCODES[0xEA] = new Instruction("NOP", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop());
         // RTI
-        OPCODES[0x40] = new Instruction("RTI", AddressingMode.IMPLIED, (cpu, mode) -> cpu.rti());
+        OPCODES[0x40] = new Instruction("RTI", 6,AddressingMode.IMPLIED, (cpu, mode) -> cpu.rti());
         // BRK
-        OPCODES[0x00] = new Instruction("BRK", AddressingMode.IMPLIED, (cpu, mode) -> cpu.brk());
+        OPCODES[0x00] = new Instruction("BRK", 7, AddressingMode.IMPLIED, (cpu, mode) -> cpu.brk());
         // Undocument OPCODES
         // ANC 
-        OPCODES[0x0B] = new Instruction("ANC", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.anc(mode));
+        OPCODES[0x0B] = new Instruction("ANC", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.anc(mode));
         // ANC2
-        OPCODES[0x2B] = new Instruction("ANC", AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.anc(mode));
-
+        OPCODES[0x2B] = new Instruction("ANC", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.anc(mode));
+        // ALR
+        OPCODES[0x4B] = new Instruction("ALR", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.alr(mode));
+        // ANE
+        OPCODES[0x8B] = new Instruction("ANE", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.ane(mode));
+        // ARR
+        OPCODES[0x6B] = new Instruction("ARR", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.arr(mode));
+        // DCP - Zero Page
+        OPCODES[0xC7] = new Instruction("DCP", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.dcp(mode));
+        // DCP - Zerop Page, X
+        OPCODES[0xD7] = new Instruction("DCP", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.dcp(mode));
+        // DCP - Absolute
+        OPCODES[0xCF] = new Instruction("DCP", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.dcp(mode));
+        // DCP - Absolute,X
+        OPCODES[0xDF] = new Instruction("DCP", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.dcp(mode));
+        // DCP - Absolute,Y
+        OPCODES[0xDB] = new Instruction("DCP", 7, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.dcp(mode));
+        // DCP - Indirect,X
+        OPCODES[0xC3] = new Instruction("DCP", 8, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.dcp(mode));
+        // DCP - Indirect,Y
+        OPCODES[0xD3] = new Instruction("DCP", 8, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.dcp(mode));
+        // ISC - Zero Page
+        OPCODES[0xE7] = new Instruction("ISC", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.isc(mode));
+        // ISC - Zero Page,X
+        OPCODES[0xF7] = new Instruction("ISC", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.isc(mode));
+        // ISC - Absolute
+        OPCODES[0xEF] = new Instruction("ISC", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.isc(mode));
+        // ISC - Absolute,X
+        OPCODES[0xFF] = new Instruction("ISC", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.isc(mode));
+        // ISC - Absolute,Y
+        OPCODES[0xFB] = new Instruction("ISC", 7, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.isc(mode));
+        // ISC - Indirect,X
+        OPCODES[0xE3] = new Instruction("ISC", 8, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.isc(mode));
+        // ISC - Indirect,Y
+        OPCODES[0xF3] = new Instruction("ISC", 8, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.isc(mode));
+        // LAS - Absolute,Y
+        OPCODES[0xBB] = new Instruction("LAS", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.las(mode));
+        // LAX - Zero Page
+        OPCODES[0xA7] = new Instruction("LAX", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.lax(mode));
+        // LAX - Zero Page, Y
+        OPCODES[0xB7] = new Instruction("LAX", 4, AddressingMode.ZERO_PAGE_Y, (cpu, mode) -> cpu.lax(mode));
+        // LAX - Absolute
+        OPCODES[0xAF] = new Instruction("LAX", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.lax(mode));
+        // LAX - Absolute,Y
+        OPCODES[0xBF] = new Instruction("LAX", 4, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.lax(mode));
+        // LAX - Indirect,X
+        OPCODES[0xA3] = new Instruction("LAX", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.lax(mode));
+        // LAX - Indirect,Y
+        OPCODES[0xB3] = new Instruction("LAX", 5, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.lax(mode));
+        // LXA - Immediate
+        OPCODES[0xAB] = new Instruction("LXA", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.lxa(mode));
+        // RLA - Zero Page
+        OPCODES[0x27] = new Instruction("RLA", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.rla(mode));
+        // RLA - Zero Page, X
+        OPCODES[0x37] = new Instruction("RLA", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.rla(mode));
+        // RLA - Absolute
+        OPCODES[0x2F] = new Instruction("RLA", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.rla(mode));
+        // RLA - Absolute,X
+        OPCODES[0x3F] = new Instruction("RLA", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.rla(mode));
+        // RLA - Absolute,Y
+        OPCODES[0x2B] = new Instruction("RLA", 7, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.rla(mode));
+        // RLA - Indirect,X
+        OPCODES[0x23] = new Instruction("RLA", 8, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.rla(mode));
+        // RLA - Indirect,Y
+        OPCODES[0x33] = new Instruction("RLA", 8, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.rla(mode));
+        // RRA - Zero Page
+        OPCODES[0x67] = new Instruction("RRA", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.rra(mode));
+        // RRA - Zero Page,X
+        OPCODES[0x77] = new Instruction("RRA", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.rra(mode));
+        // RRA - Absolute
+        OPCODES[0x6F] = new Instruction("RRA", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.rra(mode));
+        // RRA - Absolute,X
+        OPCODES[0x7F] = new Instruction("RRA", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.rra(mode));
+        // RRA - Absolute,Y
+        OPCODES[0x6B] = new Instruction("RRA", 7, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.rra(mode));
+        // RRA - Indirect,X
+        OPCODES[0x63] = new Instruction("RRA", 8, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.rra(mode));
+        // RRA - Indirect,Y
+        OPCODES[0x73] = new Instruction("RRA", 8, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.rra(mode));
+        // SAX - Zero Page
+        OPCODES[0x87] = new Instruction("SAX", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.sax(mode));
+        // SAX - Zero Page,Y
+        OPCODES[0x97] = new Instruction("SAX", 4, AddressingMode.ZERO_PAGE_Y, (cpu, mode) -> cpu.sax(mode));
+        // SAX - Absolute
+        OPCODES[0x8F] = new Instruction("SAX", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.sax(mode));
+        // SAX - Indirect, X
+        OPCODES[0x83] = new Instruction("SAX", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.sax(mode));
+        // SBX - Immediate
+        OPCODES[0xCB] = new Instruction("SBX", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.sbx(mode));
+        // SHA - Absolute, Y
+        OPCODES[0x9F] = new Instruction("SHA", 5, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.sha(mode));
+        // SHA - Indirect, X
+        OPCODES[0x93] = new Instruction("SHA", 6, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.sha(mode));
+        // SHX - Absolute, Y
+        OPCODES[0x9E] = new Instruction("SHX", 5, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.shx(mode));
+        // SHY - Absolute, X
+        OPCODES[0x9C] = new Instruction("SHY", 5, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.shy(mode));
+        // SLO - Zero Page
+        OPCODES[0x07] = new Instruction("SLO", 5, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.slo(mode));
+        // SLO - Zero Page,X
+        OPCODES[0x17] = new Instruction("SLO", 6, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.slo(mode));
+        // SLO - Absolute
+        OPCODES[0x0F] = new Instruction("SLO", 6, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.slo(mode));
+        // SLO - Absolute, X
+        OPCODES[0x1F] = new Instruction("SLO", 7, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.slo(mode));
+        // SLO - Absolute, Y
+        OPCODES[0x1B] = new Instruction("SLO", 7, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.slo(mode));
+        // SLO - Indirect, X
+        OPCODES[0x03] = new Instruction("SLO", 8, AddressingMode.INDIRECT_X, (cpu, mode) -> cpu.slo(mode));
+        // SLO - Indirect, Y
+        OPCODES[0x13] = new Instruction("SLO", 8, AddressingMode.INDIRECT_Y, (cpu, mode) -> cpu.slo(mode));
+        // TAS - Absolute, Y
+        OPCODES[0x9B] = new Instruction("TAS", 5, AddressingMode.ABSOLUTE_Y, (cpu, mode) -> cpu.tas(mode));
+        // USBC - Immediate
+        OPCODES[0xEB] = new Instruction("USBC", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.usbc(mode));
+        // NOP - Implied
+        OPCODES[0x1A] = new Instruction("NOP", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x3A] = new Instruction("NOP", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x5A] = new Instruction("NOP", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x7A] = new Instruction("NOP", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xDA] = new Instruction("NOP", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xFA] = new Instruction("NOP", 2, AddressingMode.IMPLIED, (cpu, mode) -> cpu.nop(mode));
+        // NOP - immediate
+        OPCODES[0x80] = new Instruction("NOP", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x82] = new Instruction("NOP", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x89] = new Instruction("NOP", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xC2] = new Instruction("NOP", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xE2] = new Instruction("NOP", 2, AddressingMode.IMMEDIATE, (cpu, mode) -> cpu.nop(mode));
+        // NOP - Zero Page
+        OPCODES[0x04] = new Instruction("NOP", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x44] = new Instruction("NOP", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x64] = new Instruction("NOP", 3, AddressingMode.ZERO_PAGE, (cpu, mode) -> cpu.nop(mode));
+        // NOP - Zero Page,X
+        OPCODES[0x14] = new Instruction("NOP", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x34] = new Instruction("NOP", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x54] = new Instruction("NOP", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x74] = new Instruction("NOP", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xD4] = new Instruction("NOP", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xF4] = new Instruction("NOP", 4, AddressingMode.ZERO_PAGE_X, (cpu, mode) -> cpu.nop(mode));
+        // NOP - Absolute
+        OPCODES[0x0C] = new Instruction("NOP", 4, AddressingMode.ABSOLUTE, (cpu, mode) -> cpu.nop(mode));
+        // NOP - Absolute,X
+        OPCODES[0x1C] = new Instruction("NOP", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x3C] = new Instruction("NOP", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x5C] = new Instruction("NOP", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0x7C] = new Instruction("NOP", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xDC] = new Instruction("NOP", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.nop(mode));
+        OPCODES[0xFC] = new Instruction("NOP", 4, AddressingMode.ABSOLUTE_X, (cpu, mode) -> cpu.nop(mode));
     }
 
     public int step() {

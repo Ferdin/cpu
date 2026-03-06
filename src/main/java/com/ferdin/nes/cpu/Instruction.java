@@ -6,9 +6,11 @@ public class Instruction {
     public final String mnemonic;
     public final AddressingMode mode;
     public final BiConsumer<CPU, AddressingMode> execute;
+    public final int cycles;
 
-    public Instruction(String mnemonic, AddressingMode mode, BiConsumer<CPU, AddressingMode> execute) {
+    public Instruction(String mnemonic, int cycles, AddressingMode mode, BiConsumer<CPU, AddressingMode> execute) {
         this.mnemonic = mnemonic;
+        this.cycles = cycles;
         this.mode = mode;
         this.execute = execute;
     }

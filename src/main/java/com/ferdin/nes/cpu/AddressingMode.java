@@ -2,6 +2,7 @@ package main.java.com.ferdin.nes.cpu;
 public enum AddressingMode {
         ACCUMULATOR,
         IMPLIED,
+        RELATIVE,
         INDIRECT,
         IMMEDIATE,
         ZERO_PAGE,
