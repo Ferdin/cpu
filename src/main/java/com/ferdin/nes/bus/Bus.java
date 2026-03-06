@@ -80,8 +80,11 @@ public class Bus implements Mem {
 
             throw new UnsupportedOperationException("PPU not supported yet");
 
-        } 
-        else if (addr >= 0x8000 && addr <= 0xFFFF) {
+        } else if (addr >= 0x4000 && addr <= 0x401F) {
+       // APU and I/O registers - return open bus value for nestest
+            return 0xFF; // Will implement when APU and I/O are supported
+
+        } else if (addr >= 0x8000 && addr <= 0xFFFF) {
 
             if (rom == null) {
                 return 0; // or read from RAM for test mode
