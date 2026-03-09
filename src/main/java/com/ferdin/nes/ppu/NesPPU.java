@@ -20,6 +20,9 @@ public class NesPPU implements PPU {
     public int             oamAddr;
     public int[]           oamData;
     public int[]           paletteTable;
+    public int             cycles;
+    public int             scanline;
+    public Byte            nmiInterrupt; // null if no NMI, 1 if NMI should be triggered
 
     private int internalDataBuf;
 
@@ -89,8 +92,11 @@ public class NesPPU implements PPU {
 
     @Override
     public void writeToCtrl(int value) {
-        //boolean beforeNmiStatus = ctrl.generateVblankNmi();
+        boolean beforeNmiStatus = ctrl.generateVblankNmi();
         ctrl.update(value);
+        if(!beforeNmiStatus && ctrl.generateVblankNmi() && status.isInVblank()) {
+            nmiInterrupt = 1;
+        }
     }
 
     @Override
@@ -202,5 +208,47 @@ public class NesPPU implements PPU {
             oamData[oamAddr] = b & 0xFF;
             oamAddr = (oamAddr + 1) & 0xFF; // wrapping add
         }
+    }
+
+    public boolean tick(int cycles) {
+
+        this.cycles += cycles;
+
+        if (this.cycles >= 341) {
+
+            this.cycles -= 341;
+            scanline++;
+
+            if (scanline == 241) {
+
+                status.setVblankStatus(true);
+                status.setSpriteZeroHit(false);
+
+                if (ctrl.generateVblankNmi()) {
+                    nmiInterrupt = 1;
+                }
+            }
+
+            if (scanline >= 262) {
+
+                scanline = 0;
+                nmiInterrupt = null;
+
+                status.setSpriteZeroHit(false);
+                status.resetVblankStatus();
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Byte pollNmiInterrupt() {
+
+        Byte result = nmiInterrupt;
+        nmiInterrupt = null;
+
+        return result;
     }
 }

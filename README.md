@@ -1,4 +1,4 @@
-## Section 8 - Memory Management
+## Memory Management
 
 Learn:
 
@@ -7,17 +7,18 @@ Learn:
 ✅ Mirroring
 ✅ Building a proper Bus class
 
-## Section 8.1 - Test CPU with ROMS ⭐ (I am here!)
+## Test CPU with ROMS
 
-Refactor the working CPU to follow DRY principle.
+✅ Refactor the working CPU to follow DRY principle.
 
-Run Emulation tests with the roms available in the link below:
-https://www.nesdev.org/wiki/Emulator_tests
+✅ Run Emulation tests with the roms available in the link below:
+https://www.nesdev.org/wiki/Emulator_tests (will do more as I progress)
 
-## Section 9 - The PPU (Graphics)
+## The PPU (Graphics) ⭐ (I am here!)
 
 Time: Many hours!
 This is the big one - learning how the NES displays graphics.
+Test the PacMan rom
 
 ## Notes:
 

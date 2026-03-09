@@ -112,17 +112,50 @@ public class CPU implements Mem{
         return status;
     }
 
+    public void interruptNMI() {
+        // push program counter
+        stackPushU16(programCounter);
+
+        // clone status
+        int flags = status;
+
+        // clear BREAK flag
+        flags &= ~(1 << 4);
+
+        // set BREAK2 flag
+        flags |= (1 << 5);
+
+        // push flags
+        stackPush(flags & 0xFF);
+
+        // set interrupt disable flag
+        status |= INTERRUPT_DISABLE;
+
+        // NMI consumes 2 cycles
+        bus.tick(2);
+
+        // jump to NMI vector
+        programCounter = memReadU16(0xFFFA);
+    }
+
     public void runUntilBreak(java.util.function.Consumer<CPU> callback) {
         while (true) {
+            // --- check NMI interrupt ---
+            Byte nmi = bus.pollNmiStatus();
+            if (nmi != null) {
+                interruptNMI();
+            }
+
+            // --- callback for debugger ---
             if (callback != null) {
                 callback.accept(this);
             }
 
             int opcode = memRead(programCounter) & 0xFF;
 
-            step();  // always execute instruction
+            step(); // execute instruction
 
-            if (opcode == 0x00) {  // BRK
+            if (opcode == 0x00) { // BRK
                 break;
             }
         }

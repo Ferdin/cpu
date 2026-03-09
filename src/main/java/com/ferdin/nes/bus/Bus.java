@@ -46,10 +46,12 @@ public class Bus implements Mem {
     private NesPPU ppu;
     private byte[] cpuVram;
     private int[]  prgRom;
+    private int cycles;
 
     public Bus() {
         this.rom = null;
         this.cpuVram = new byte[2048];
+        this.cycles = 0;
     }
 
     public Bus(Rom rom) {
@@ -60,7 +62,23 @@ public class Bus implements Mem {
         }
         this.rom = rom;
         this.cpuVram = new byte[2048];
+        this.cycles = 0;
         this.ppu    = new NesPPU(chrRom, rom.screenMirroring);
+    }
+
+    public Byte pollNmiStatus() {
+        Byte nmi = ppu.nmiInterrupt;
+        ppu.nmiInterrupt = null;
+        return nmi;
+    }
+
+    public void tick(int cycles) {
+        this.cycles += cycles;
+        this.ppu.tick(cycles * 3); // PPU runs at 3x CPU speed
+    }
+
+    public int getCycles() {
+        return cycles;
     }
 
     // Optional getters if needed
