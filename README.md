@@ -28,15 +28,17 @@ NES has 65,536 memory addresses (0x0000 to 0xFFFF). But different parts of this 
 
 Address Range Size What It's Used For
 
-> 0x0000 - 0x00FF 256 bytes Zero Page (Fast RAM)
-> 0x0100 - 0x01FF 256 bytes Stack
-> 0x0200 - 0x07FF 1.5 KB General RAM
-> 0x0800 - 0x1FFF (mirrors) Mirrors of 0x0000-0x07FF
-> 0x2000 - 0x2007 8 bytes PPU Registers (Graphics)
-> 0x2008 - 0x3FFF (mirrors) Mirrors of PPU registers
-> 0x4000 - 0x4017 24 bytes APU & I/O Registers (Sound/Input)
-> 0x4018 - 0x401F 8 bytes APU & I/O (rarely used)
-> 0x4020 - 0xFFFF ~49 KB Cartridge space (ROM, mapper)
+```
+ 0x0000 - 0x00FF 256 bytes Zero Page (Fast RAM)
+ 0x0100 - 0x01FF 256 bytes Stack
+ 0x0200 - 0x07FF 1.5 KB General RAM
+ 0x0800 - 0x1FFF (mirrors) Mirrors of 0x0000-0x07FF
+ 0x2000 - 0x2007 8 bytes PPU Registers (Graphics)
+ 0x2008 - 0x3FFF (mirrors) Mirrors of PPU registers
+ 0x4000 - 0x4017 24 bytes APU & I/O Registers (Sound/Input)
+ 0x4018 - 0x401F 8 bytes APU & I/O (rarely used)
+ 0x4020 - 0xFFFF ~49 KB Cartridge space (ROM, mapper)
+```
 
 More generalized layout:
 
@@ -117,10 +119,11 @@ Example:
 
 Eg: 10101010 01010101
 
-The high byte is 10101010
-The low byte is 01010101
+The _high byte_ is _10101010_
 
-Writing 0x1234 at address 0x8000:
+The _low byte_ is _01010101_
+
+Writing 0x1234 at address 0x8000:<br/>
 memWriteU16(0x8000, 0x1234);
 
 Results in:
