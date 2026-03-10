@@ -71,6 +71,11 @@ public class Emulator {
         keyMap.put(GLFW.GLFW_KEY_A,     Joypad.BUTTON_A);
         keyMap.put(GLFW.GLFW_KEY_S,     Joypad.BUTTON_B);
 
+        keyMap.put(GLFW.GLFW_KEY_W,      Joypad.UP);
+        keyMap.put(GLFW.GLFW_KEY_D,      Joypad.RIGHT);
+        keyMap.put(GLFW.GLFW_KEY_X,      Joypad.DOWN);
+        keyMap.put(GLFW.GLFW_KEY_Z,      Joypad.LEFT);
+
         // Bus — callback only writes pixels
         Bus bus = new Bus(rom, (ppu, joypad) -> {
             Renderer.render(ppu, frame);
@@ -80,14 +85,17 @@ public class Emulator {
 
         // Key callback — directly updates joypad on the main thread
         GLFW.glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
+            System.out.println("Key event: key=" + key + " action=" + action);
             if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_PRESS) {
                 GLFW.glfwSetWindowShouldClose(win, true);
                 return;
             }
             Integer button = keyMap.get(key);
+            System.out.println("Mapped button: " + button);
             if (button == null) return;
             if (action == GLFW.GLFW_PRESS) {
                 bus.getJoypad().setButtonPressed(button, true);
+                //System.out.println("Button pressed, status=" + Integer.toBinaryString(bus.getJoypad().getButtonStatus()));
             } else if (action == GLFW.GLFW_RELEASE) {
                 bus.getJoypad().setButtonPressed(button, false);
             }
@@ -128,7 +136,7 @@ public class Emulator {
                 GLFW.glfwSwapBuffers(window);
             }
 
-            try { Thread.sleep(1); } catch (InterruptedException ignored) {}
+            //try { Thread.sleep(1); } catch (InterruptedException ignored) {}
         }
 
         GLFW.glfwDestroyWindow(window);

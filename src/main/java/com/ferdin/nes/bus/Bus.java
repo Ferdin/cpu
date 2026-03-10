@@ -221,9 +221,8 @@ public class Bus implements Mem {
             }
             ppu.writeOamDma(buffer);
 
-        }else if (addr == 0x4016) {
+        }else if (addr == 0x4016) { 
             joypad1.write(data);
-            return;
         } 
         else if (addr >= 0x2008 && addr <= PPU_REGISTERS_MIRRORS_END) {
             int mirrorDownAddr = addr & 0b00100000_00000111;
@@ -234,7 +233,7 @@ public class Bus implements Mem {
                 "Attempt to write to Cartridge ROM space: " + Integer.toHexString(addr));
 
         } else {
-            System.out.println("Ignoring mem write-access at " + Integer.toHexString(addr));
+            //System.out.println("Ignoring mem write-access at " + Integer.toHexString(addr));
         }
     }
 
