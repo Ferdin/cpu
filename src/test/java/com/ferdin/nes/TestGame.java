@@ -11,6 +11,8 @@ import java.io.InputStream;
 import main.java.com.ferdin.nes.cpu.CPU;
 import main.java.com.ferdin.nes.bus.Bus;
 import main.java.com.ferdin.nes.rom.Rom;
+import main.java.com.ferdin.nes.render.Frame;
+import main.java.com.ferdin.nes.render.Renderer;
 
 public class TestGame extends JPanel implements KeyListener {
 
@@ -101,7 +103,14 @@ public class TestGame extends JPanel implements KeyListener {
 
         byte[] rawRom = loadRomFile("/main/java/resources/roms/snake.nes");
         Rom rom = new Rom(rawRom);
-        Bus bus = new Bus(rom);
+        Bus bus = new Bus(rom, (ppu) -> {
+
+            Frame frame = new Frame();
+
+            Renderer.render(ppu, frame);
+
+            window.draw(frame);
+        });
         cpu = new CPU(bus);
         // int[] game_code = new int[]{
         //     0x20, 0x06, 0x06, 0x20, 0x38, 0x06, 0x20, 0x0d, 0x06, 0x20, 0x2a, 0x06, 0x60, 0xa9, 0x02, 0x85,

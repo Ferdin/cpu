@@ -1,4 +1,5 @@
 package main.java.com.ferdin.nes.bus;
+import java.util.function.BiConsumer;
 //  _______________ $10000  _______________
 // | PRG-ROM       |       |               |
 // | Upper Bank    |       |               |
@@ -28,6 +29,7 @@ package main.java.com.ferdin.nes.bus;
 // |_______________| $0000 |_______________|
 
 import main.java.com.ferdin.nes.rom.Rom;
+import main.java.com.ferdin.nes.joypad.Joypad;
 import main.java.com.ferdin.nes.ppu.NesPPU;
 
 public class Bus implements Mem {
@@ -47,6 +49,8 @@ public class Bus implements Mem {
     private byte[] cpuVram;
     private int[]  prgRom;
     private int cycles;
+    private BiConsumer<NesPPU, Joypad> gameloopCallback;
+    private Joypad joypad1;
 
     public Bus() {
         this.rom = null;
@@ -60,10 +64,36 @@ public class Bus implements Mem {
         for (int i = 0; i < rom.chrRom.length; i++) {
             chrRom[i] = rom.chrRom[i] & 0xFF;
         }
+
+        this.prgRom = new int[rom.prgRom.length];
+        for (int i = 0; i < rom.prgRom.length; i++) {
+            this.prgRom[i] = rom.prgRom[i] & 0xFF;
+        }
+
         this.rom = rom;
         this.cpuVram = new byte[2048];
         this.cycles = 0;
         this.ppu    = new NesPPU(chrRom, rom.screenMirroring);
+    }
+
+    public Bus(Rom rom, BiConsumer<NesPPU, Joypad> callback) {
+        // Convert byte[] to int[] to match NesPPU's expected type
+        int[] chrRom = new int[rom.chrRom.length];
+        for (int i = 0; i < rom.chrRom.length; i++) {
+            chrRom[i] = rom.chrRom[i] & 0xFF;
+        }
+
+        this.prgRom = new int[rom.prgRom.length];
+        for (int i = 0; i < rom.prgRom.length; i++) {
+            this.prgRom[i] = rom.prgRom[i] & 0xFF;
+        }
+
+        this.rom = rom;
+        this.cpuVram = new byte[2048];
+        this.cycles = 0;
+        this.ppu    = new NesPPU(chrRom, rom.screenMirroring);
+        this.gameloopCallback = callback;
+        this.joypad1 = new Joypad();
     }
 
     public Byte pollNmiStatus() {
@@ -73,8 +103,18 @@ public class Bus implements Mem {
     }
 
     public void tick(int cycles) {
+
         this.cycles += cycles;
-        this.ppu.tick(cycles * 3); // PPU runs at 3x CPU speed
+
+        boolean nmiBefore = (ppu.nmiInterrupt != null);
+
+        ppu.tick(cycles * 3);
+
+        boolean nmiAfter = (ppu.nmiInterrupt != null);
+
+        if (!nmiBefore && nmiAfter && gameloopCallback != null) {
+            gameloopCallback.accept(ppu, joypad1);
+        }
     }
 
     public int getCycles() {
@@ -123,11 +163,14 @@ public class Bus implements Mem {
             int mirrorDownAddr = addr & 0b00100000_00000111;
             return memRead(mirrorDownAddr); // recursive mirror resolution
 
+        } else if (addr == 0x4016) {
+            return joypad1.read();
+
         } else if (addr >= 0x8000 && addr <= 0xFFFF) {
             return readPrgRom(addr);
 
         } else {
-            System.out.println("Ignoring mem access at " + Integer.toHexString(addr));
+            //System.out.println("Ignoring mem access at " + Integer.toHexString(addr));
             return 0;
         }
     }
@@ -178,7 +221,11 @@ public class Bus implements Mem {
             }
             ppu.writeOamDma(buffer);
 
-        } else if (addr >= 0x2008 && addr <= PPU_REGISTERS_MIRRORS_END) {
+        }else if (addr == 0x4016) {
+            joypad1.write(data);
+            return;
+        } 
+        else if (addr >= 0x2008 && addr <= PPU_REGISTERS_MIRRORS_END) {
             int mirrorDownAddr = addr & 0b00100000_00000111;
             memWrite(mirrorDownAddr, data); // recursive mirror resolution
 

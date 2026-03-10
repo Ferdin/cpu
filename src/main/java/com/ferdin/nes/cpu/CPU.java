@@ -140,22 +140,22 @@ public class CPU implements Mem{
 
     public void runUntilBreak(java.util.function.Consumer<CPU> callback) {
         while (true) {
-            // --- check NMI interrupt ---
             Byte nmi = bus.pollNmiStatus();
             if (nmi != null) {
                 interruptNMI();
             }
 
-            // --- callback for debugger ---
             if (callback != null) {
                 callback.accept(this);
             }
 
             int opcode = memRead(programCounter) & 0xFF;
 
-            step(); // execute instruction
+            int cyclesUsed = step(); // step() already returns baseCycles + extraCycles
 
-            if (opcode == 0x00) { // BRK
+            bus.tick(cyclesUsed); // ← THIS is what drives the PPU forward
+
+            if (opcode == 0x00) {
                 break;
             }
         }

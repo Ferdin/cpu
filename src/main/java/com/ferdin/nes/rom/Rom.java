@@ -26,9 +26,15 @@ public class Rom {
         // Mapper calculation: upper nibble of byte 7 | upper nibble of byte 6
         this.mapper = ((raw[7] & 0xF0) | ((raw[6] & 0xFF) >> 4)) & 0xFF;
 
+        // int inesVer = (raw[7] >> 2) & 0b11;
+        // if (inesVer != 0) {
+        //     throw new Exception("NES2.0 format is not supported");
+        // }
+
         int inesVer = (raw[7] >> 2) & 0b11;
-        if (inesVer != 0) {
-            throw new Exception("NES2.0 format is not supported");
+
+        if (inesVer == 2) {
+            System.out.println("NES 2.0 ROM detected. Attempting iNES compatible loading...");
         }
 
         boolean fourScreen = (raw[6] & 0b1000) != 0;

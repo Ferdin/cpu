@@ -4,10 +4,13 @@ import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+// import java.nio.file.Files;
+// import java.nio.file.Paths;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -91,6 +94,15 @@ public class TileViewer {
         return frame;
     }
 
+    private static byte[] loadRomFile(String resourcePath) throws IOException {
+        try (InputStream is = TestGame.class.getResourceAsStream(resourcePath)) {
+            if (is == null) {
+                throw new FileNotFoundException("Resource not found: " + resourcePath);
+            }
+            return is.readAllBytes();
+        }
+    }
+
     // ── main ─────────────────────────────────────────────────────────────
     public static void main(String[] args) throws Exception {
         // ── Init GLFW ────────────────────────────────────────────────────
@@ -139,7 +151,7 @@ public class TileViewer {
         glViewport(0, 0, WIN_W, WIN_H);
 
         // ── Load ROM & build frame ───────────────────────────────────────
-        byte[] bytes = Files.readAllBytes(Paths.get("pacman.nes"));
+        byte[] bytes = loadRomFile("/main/java/resources/roms/pacmanv2.nes");
         Rom rom  = new Rom(bytes);
         Frame rightBank = showTileBank(rom.chrRom, 1);
 
