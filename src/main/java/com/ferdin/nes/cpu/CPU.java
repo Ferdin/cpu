@@ -139,6 +139,14 @@ public class CPU implements Mem{
     }
 
     public void runUntilBreak(java.util.function.Consumer<CPU> callback) {
+        // Target: ~1,789,773 cycles per second
+        // Each frame = 29,780 cycles at 60fps
+        final int CYCLES_PER_FRAME = 29780;
+        final long TARGET_NS_PER_FRAME = 1_000_000_000L / 60; // ~16.67ms
+
+        int cyclesThisFrame = 0;
+        long frameStartTime = System.nanoTime();
+
         while (true) {
             Byte nmi = bus.pollNmiStatus();
             if (nmi != null) {
@@ -150,10 +158,32 @@ public class CPU implements Mem{
             }
 
             int opcode = memRead(programCounter) & 0xFF;
+            int cyclesUsed = step();
+            bus.tick(cyclesUsed);
+            cyclesThisFrame += cyclesUsed;
 
-            int cyclesUsed = step(); // step() already returns baseCycles + extraCycles
+            // Once we've hit a full frame's worth of cycles, sleep until
+            // the next frame should start
+            if (cyclesThisFrame >= CYCLES_PER_FRAME) {
+                cyclesThisFrame -= CYCLES_PER_FRAME;
 
-            bus.tick(cyclesUsed); // ← THIS is what drives the PPU forward
+                long now = System.nanoTime();
+                long elapsed = now - frameStartTime;
+                long sleepNs = TARGET_NS_PER_FRAME - elapsed;
+
+                if (sleepNs > 0) {
+                    try {
+                        long sleepMs = sleepNs / 1_000_000;
+                        int  sleepNsRemainder = (int)(sleepNs % 1_000_000);
+                        Thread.sleep(sleepMs, sleepNsRemainder);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+
+                frameStartTime = System.nanoTime();
+            }
 
             if (opcode == 0x00) {
                 break;
