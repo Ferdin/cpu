@@ -267,4 +267,8 @@ public class Bus implements Mem {
         memWrite(pos + 1, (data >> 8) & 0xFF);
     }
 
+    public Joypad getJoypad() {
+        return joypad1;
+    }
+
 }
