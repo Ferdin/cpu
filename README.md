@@ -14,11 +14,11 @@ Learn:
 ✅ Run Emulation tests with the roms available in the link below:
 https://www.nesdev.org/wiki/Emulator_tests (will do more as I progress)
 
-## The PPU (Graphics) ⭐ (I am here!)
+## The PPU (Graphics)✅
 
-Time: Many hours!
-This is the big one - learning how the NES displays graphics.
-Test the PacMan rom
+Time: Many hours!✅ <br/>
+This is the big one - learning how the NES displays graphics.✅ <br/>
+Test the PacMan rom✅ </br>
 
 ## Notes:
 
@@ -297,3 +297,9 @@ Meanwhile, during VBLANK, the CPU:
 1. Gets NMI interrupt
 2. Uses DMA to quickly refresh all sprite positions in OAM
 3. Updates scroll, palette, nametables for next frame
+
+## The APU (Audio)⭐ (I am here!)
+
+CPU clock: 1,789,773 Hz <br/>
+APU clock: 894,886 Hz (every 2 CPU cycles) <br/>
+PPU clock: 5,369,318 Hz (every 1/3 CPU cycle) <br/>
