@@ -211,37 +211,38 @@ public class NesPPU implements PPU {
     }
 
     public boolean tick(int cycles) {
-
         this.cycles += cycles;
-
         if (this.cycles >= 341) {
+            if (isSprite0Hit(this.cycles)) {
+                status.setSpriteZeroHit(true);
+            }
 
             this.cycles -= 341;
             scanline++;
 
             if (scanline == 241) {
-
                 status.setVblankStatus(true);
                 status.setSpriteZeroHit(false);
-
                 if (ctrl.generateVblankNmi()) {
                     nmiInterrupt = 1;
                 }
             }
 
             if (scanline >= 262) {
-
                 scanline = 0;
                 nmiInterrupt = null;
-
                 status.setSpriteZeroHit(false);
                 status.resetVblankStatus();
-
                 return true;
             }
         }
-
         return false;
+    }
+
+    private boolean isSprite0Hit(int cycle) {
+        int y = oamData[0] & 0xFF;
+        int x = oamData[3] & 0xFF;
+        return (y == scanline) && (x <= cycle) && mask.showSprites();
     }
 
     public Byte pollNmiInterrupt() {
