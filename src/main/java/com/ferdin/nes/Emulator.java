@@ -85,17 +85,14 @@ public class Emulator {
 
         // Key callback — directly updates joypad on the main thread
         GLFW.glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
-            System.out.println("Key event: key=" + key + " action=" + action);
             if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_PRESS) {
                 GLFW.glfwSetWindowShouldClose(win, true);
                 return;
             }
             Integer button = keyMap.get(key);
-            System.out.println("Mapped button: " + button);
             if (button == null) return;
             if (action == GLFW.GLFW_PRESS) {
                 bus.getJoypad().setButtonPressed(button, true);
-                //System.out.println("Button pressed, status=" + Integer.toBinaryString(bus.getJoypad().getButtonStatus()));
             } else if (action == GLFW.GLFW_RELEASE) {
                 bus.getJoypad().setButtonPressed(button, false);
             }
