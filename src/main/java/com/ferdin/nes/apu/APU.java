@@ -23,15 +23,32 @@ public class APU {
     // -------------------------
     private boolean frameIrq = false;
 
-    public APU() {}
+    // -------------------------
+    // Audio output
+    // -------------------------
+    private AudioOutput audioOutput;
+    private int totalCycles = 0;
+
+    public APU() {
+        //audioOutput = new AudioOutput();
+    }
+
+    public APU(AudioOutput audioOutput) {
+        this.audioOutput = audioOutput;
+    }
 
     // Called every CPU cycle
     public void tick() {
         cycles++;
+        totalCycles++;
 
         // APU ticks every 2 CPU cycles
         if (cycles % 2 == 0) {
             tickChannels();
+            // Output a sample every 2 CPU cycles
+            if (audioOutput != null) {
+                audioOutput.receiveSample(getSample(), 2);
+            }
         }
 
         // Frame counter ticks
@@ -103,6 +120,8 @@ public class APU {
     // CPU Register Writes
     // -------------------------
     public void writeRegister(int addr, int data) {
+        System.out.println("APU writeRegister: 0x" + Integer.toHexString(addr) 
+        + " = 0x" + Integer.toHexString(data));
         switch (addr) {
             // Pulse 1
             case 0x4000 -> pulse1.writeControl(data);
@@ -168,14 +187,23 @@ public class APU {
     }
 
     // Called by Bus to get audio sample for output
+    private long debugCounter = 0;
+
     public float getSample() {
-        return mix(
-            pulse1.getSample(),
-            pulse2.getSample(),
-            triangle.getSample(),
-            noise.getSample(),
-            dmc.getSample()
-        );
+        float sP1  = pulse1.getSample();
+        float sP2  = pulse2.getSample();
+        float sTri = triangle.getSample();
+        float sNoi = noise.getSample();
+        float sDmc = dmc.getSample();
+
+        // Print every 100,000 samples so we don't flood the console
+        debugCounter++;
+        if (debugCounter % 100_000 == 0) {
+            System.out.printf("APU samples — P1:%.3f P2:%.3f TRI:%.3f NOI:%.3f DMC:%.3f%n",
+                sP1, sP2, sTri, sNoi, sDmc);
+        }
+
+        return mix(sP1, sP2, sTri, sNoi, sDmc);
     }
 
     // NES APU non-linear mixing formula
@@ -193,5 +221,17 @@ public class APU {
 
     public boolean isFrameIrq() {
         return frameIrq;
+    }
+
+    public void cleanup() {
+        if (audioOutput != null) {
+            audioOutput.cleanup();
+        }
+    }
+    public void setAudioOutput(AudioOutput audioOutput) {
+        this.audioOutput = audioOutput;
+    }
+    public DMCChannel getDmc() {
+        return dmc;
     }
 }

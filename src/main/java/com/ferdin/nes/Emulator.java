@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import main.java.com.ferdin.nes.apu.AudioOutput;
 // import java.nio.file.Files;
 // import java.nio.file.Paths;
 import main.java.com.ferdin.nes.bus.Bus;
@@ -82,6 +83,8 @@ public class Emulator {
             System.arraycopy(frame.data, 0, pixelData, 0, frame.data.length);
             frameReady.set(true);
         });
+        AudioOutput audioOutput = new AudioOutput();
+        bus.getApu().setAudioOutput(audioOutput); // ← bus exists now, no NPE
 
         // Key callback — directly updates joypad on the main thread
         GLFW.glfwSetKeyCallback(window, (win, key, scancode, action, mods) -> {
@@ -136,6 +139,7 @@ public class Emulator {
             //try { Thread.sleep(1); } catch (InterruptedException ignored) {}
         }
 
+        audioOutput.cleanup();
         GLFW.glfwDestroyWindow(window);
         GLFW.glfwTerminate();
         System.exit(0);

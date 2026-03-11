@@ -29,6 +29,7 @@ import java.util.function.BiConsumer;
 // |_______________| $0000 |_______________|
 
 import main.java.com.ferdin.nes.rom.Rom;
+import main.java.com.ferdin.nes.apu.APU;
 import main.java.com.ferdin.nes.joypad.Joypad;
 import main.java.com.ferdin.nes.ppu.NesPPU;
 
@@ -51,11 +52,13 @@ public class Bus implements Mem {
     private int cycles;
     private BiConsumer<NesPPU, Joypad> gameloopCallback;
     private Joypad joypad1;
+    private APU apu;
 
     public Bus() {
         this.rom = null;
         this.cpuVram = new byte[2048];
         this.cycles = 0;
+        this.apu = new APU();
     }
 
     public Bus(Rom rom) {
@@ -74,6 +77,8 @@ public class Bus implements Mem {
         this.cpuVram = new byte[2048];
         this.cycles = 0;
         this.ppu    = new NesPPU(chrRom, rom.screenMirroring);
+        this.apu = new APU();
+        this.apu.getDmc().setMemoryReader(addr -> memRead(addr));
     }
 
     public Bus(Rom rom, BiConsumer<NesPPU, Joypad> callback) {
@@ -94,6 +99,7 @@ public class Bus implements Mem {
         this.ppu    = new NesPPU(chrRom, rom.screenMirroring);
         this.gameloopCallback = callback;
         this.joypad1 = new Joypad();
+        this.apu = new APU();
     }
 
     public Byte pollNmiStatus() {
@@ -102,15 +108,22 @@ public class Bus implements Mem {
         return nmi;
     }
 
-    public void tick(int cycles) {
-
+   public void tick(int cycles) {
         this.cycles += cycles;
 
         boolean nmiBefore = (ppu.nmiInterrupt != null);
-
         ppu.tick(cycles * 3);
-
         boolean nmiAfter = (ppu.nmiInterrupt != null);
+
+        for (int i = 0; i < cycles; i++) {
+            apu.tick();
+        }
+
+        // DMC IRQ — triggers CPU IRQ if pending
+        if (apu.getDmc().isIrqPending()) {
+            apu.getDmc().clearIrq();
+            // TODO: trigger CPU IRQ when you implement IRQ handling
+        }
 
         if (!nmiBefore && nmiAfter && gameloopCallback != null) {
             gameloopCallback.accept(ppu, joypad1);
@@ -161,16 +174,18 @@ public class Bus implements Mem {
 
         } else if (addr >= 0x2008 && addr <= PPU_REGISTERS_MIRRORS_END) {
             int mirrorDownAddr = addr & 0b00100000_00000111;
-            return memRead(mirrorDownAddr); // recursive mirror resolution
+            return memRead(mirrorDownAddr);
 
-        } else if (addr == 0x4016) {
+        } else if (addr == 0x4015) {  // ← exact match, not >=
+            return apu.readStatus();
+
+        } else if (addr == 0x4016) {  // ← now reachable
             return joypad1.read();
 
         } else if (addr >= 0x8000 && addr <= 0xFFFF) {
             return readPrgRom(addr);
 
         } else {
-            //System.out.println("Ignoring mem access at " + Integer.toHexString(addr));
             return 0;
         }
     }
@@ -183,6 +198,10 @@ public class Bus implements Mem {
         addr &= 0xFFFF;
         data &= 0xFF;
 
+        if (addr >= 0x4000 && addr <= 0x4017) {
+            System.out.println("memWrite $" + Integer.toHexString(addr) 
+                + " = $" + Integer.toHexString(data));
+        }
         if (addr >= RAM && addr <= RAM_MIRRORS_END) {
             int mirrorDownAddr = addr & 0b00000111_11111111;
             cpuVram[mirrorDownAddr] = (byte) data;
@@ -213,7 +232,6 @@ public class Bus implements Mem {
             ppu.writeToData(data);
 
         } else if (addr == 0x4014) {
-            // OAM DMA - copy 256 bytes from CPU page into OAM
             int[] buffer = new int[256];
             int page = (data << 8) & 0xFFFF;
             for (int i = 0; i < 256; i++) {
@@ -221,19 +239,22 @@ public class Bus implements Mem {
             }
             ppu.writeOamDma(buffer);
 
-        }else if (addr == 0x4016) { 
-            joypad1.write(data);
-        } 
-        else if (addr >= 0x2008 && addr <= PPU_REGISTERS_MIRRORS_END) {
+        } else if (addr == 0x4016) {
+            joypad1.write(data);  // ← must come BEFORE the APU range check
+
+        } else if ((addr >= 0x4000 && addr <= 0x4013) || addr == 0x4015 || addr == 0x4017) {
+            apu.writeRegister(addr, data);
+
+        } else if (addr >= 0x2008 && addr <= PPU_REGISTERS_MIRRORS_END) {
             int mirrorDownAddr = addr & 0b00100000_00000111;
-            memWrite(mirrorDownAddr, data); // recursive mirror resolution
+            memWrite(mirrorDownAddr, data);
 
         } else if (addr >= 0x8000 && addr <= 0xFFFF) {
             throw new UnsupportedOperationException(
                 "Attempt to write to Cartridge ROM space: " + Integer.toHexString(addr));
 
         } else {
-            //System.out.println("Ignoring mem write-access at " + Integer.toHexString(addr));
+            // silently ignore
         }
     }
 
@@ -268,6 +289,10 @@ public class Bus implements Mem {
 
     public Joypad getJoypad() {
         return joypad1;
+    }
+
+    public APU getApu() {
+        return apu;
     }
 
 }
