@@ -45,7 +45,7 @@ public class DMCChannel {
     // Output shift register
     // -------------------------
     private int  shiftRegister       = 0;
-    private int  bitsRemaining       = 0;
+    private int  bitsRemaining       = 8;
     private boolean silenceFlag      = true;
 
     // -------------------------
@@ -113,39 +113,38 @@ public class DMCChannel {
     }
 
     private void tickOutput() {
-        // Clock the output shift register
         if (!silenceFlag) {
             if ((shiftRegister & 1) == 1) {
-                if (outputLevel <= 125) outputLevel += 2; // increment by 2, cap at 127
+                if (outputLevel <= 125) outputLevel += 2;
             } else {
-                if (outputLevel >= 2)   outputLevel -= 2; // decrement by 2, floor at 0
+                if (outputLevel >= 2) outputLevel -= 2;
             }
         }
         shiftRegister >>= 1;
         bitsRemaining--;
 
-        // When shift register is empty, load next byte
         if (bitsRemaining == 0) {
             bitsRemaining = 8;
             if (sampleBufferEmpty) {
-                silenceFlag = true; // no data — stay silent
+                silenceFlag = true;
             } else {
-                silenceFlag   = false;
-                shiftRegister = sampleBuffer;
+                silenceFlag       = false;
+                shiftRegister     = sampleBuffer;
                 sampleBufferEmpty = true;
-                fetchSampleByte(); // try to fill buffer again
+                fetchSampleByte();
             }
         }
     }
 
     // Fetch next byte from ROM into sample buffer
     private void fetchSampleByte() {
-        if (bytesRemaining == 0 || memoryReader == null) return;
+        if (bytesRemaining == 0 || memoryReader == null) {
+            return;
+        }
 
         sampleBuffer      = memoryReader.read(currentAddress);
         sampleBufferEmpty = false;
 
-        // Advance address — wraps around from $FFFF to $8000
         currentAddress++;
         if (currentAddress > 0xFFFF) {
             currentAddress = 0x8000;
@@ -155,7 +154,6 @@ public class DMCChannel {
 
         if (bytesRemaining == 0) {
             if (loopFlag) {
-                // Restart sample
                 currentAddress = sampleAddress;
                 bytesRemaining = sampleLength;
             } else if (irqEnabled) {
@@ -173,8 +171,7 @@ public class DMCChannel {
 
         if (!enabled) {
             bytesRemaining = 0;
-        } else if (bytesRemaining == 0) {
-            // Restart sample from beginning
+        } else if (bytesRemaining == 0 && sampleLength > 0) {
             currentAddress = sampleAddress;
             bytesRemaining = sampleLength;
             if (sampleBufferEmpty) {

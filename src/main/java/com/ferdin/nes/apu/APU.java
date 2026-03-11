@@ -186,22 +186,12 @@ public class APU {
         }
     }
 
-    // Called by Bus to get audio sample for output
-    private long debugCounter = 0;
-
     public float getSample() {
         float sP1  = pulse1.getSample();
         float sP2  = pulse2.getSample();
         float sTri = triangle.getSample();
         float sNoi = noise.getSample();
         float sDmc = dmc.getSample();
-
-        // Print every 100,000 samples so we don't flood the console
-        debugCounter++;
-        if (debugCounter % 100_000 == 0) {
-            System.out.printf("APU samples — P1:%.3f P2:%.3f TRI:%.3f NOI:%.3f DMC:%.3f%n",
-                sP1, sP2, sTri, sNoi, sDmc);
-        }
 
         return mix(sP1, sP2, sTri, sNoi, sDmc);
     }
@@ -231,7 +221,10 @@ public class APU {
     public void setAudioOutput(AudioOutput audioOutput) {
         this.audioOutput = audioOutput;
     }
-    public DMCChannel getDmc() {
-        return dmc;
-    }
+
+    public PulseChannel   getPulse1()   { return pulse1;   }
+    public PulseChannel   getPulse2()   { return pulse2;   }
+    public TriangleChannel getTriangle() { return triangle; }
+    public NoiseChannel   getNoise()    { return noise;    }
+    public DMCChannel     getDmc()      { return dmc;      }
 }

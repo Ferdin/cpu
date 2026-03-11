@@ -64,6 +64,7 @@ public class TriangleChannel {
         controlFlag          = (data & 0x80) != 0;
         lengthCounterHalt    = (data & 0x80) != 0; // same bit
         linearCounterPeriod  = data & 0x7F;
+        linearCounter       = linearCounterPeriod;
     }
 
     // $400A — Timer low
@@ -78,6 +79,8 @@ public class TriangleChannel {
             lengthCounter = LENGTH_TABLE[(data >> 3) & 0x1F];
         }
         linearCounterReload  = true; // trigger linear counter reload
+        // Immediately reload linear counter so it's non-zero right away
+        linearCounter = linearCounterPeriod;
     }
 
     // -------------------------
