@@ -84,7 +84,6 @@ public class PulseChannel {
 
     // $4000 / $4004 — Duty, envelope, length counter halt
     public void writeControl(int data) {
-        System.out.println("Pulse" + channelNum + " writeControl: 0x" + Integer.toHexString(data));
         dutyMode           = (data >> 6) & 0b11;
         lengthCounterHalt  = (data & 0x20) != 0;
         envelopeLoop       = (data & 0x20) != 0;
@@ -110,9 +109,6 @@ public class PulseChannel {
 
     // $4003 / $4007 — Length counter load + timer high 3 bits
     public void writeTimerHigh(int data) {
-        System.out.println("Pulse" + channelNum + " writeTimerHigh: 0x" + Integer.toHexString(data) 
-        + " lengthCounter=" + LENGTH_TABLE[(data >> 3) & 0x1F]
-        + " timerPeriod=" + timerPeriod);
         timerPeriod   = (timerPeriod & 0x00FF) | ((data & 0b111) << 8);
         if (enabled) {
             lengthCounter = LENGTH_TABLE[(data >> 3) & 0x1F];

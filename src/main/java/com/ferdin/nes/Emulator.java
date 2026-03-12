@@ -57,7 +57,7 @@ public class Emulator {
         ByteBuffer glBuffer = ByteBuffer.allocateDirect(WIDTH * HEIGHT * 3);
         AtomicBoolean frameReady = new AtomicBoolean(false);
 
-        byte[] bytes = loadRomFile("/main/java/resources/roms/pacmanv2.nes");
+        byte[] bytes = loadRomFile("/main/java/resources/roms/mario.nes");
         Rom rom = new Rom(bytes);
         Frame frame = new Frame();
 

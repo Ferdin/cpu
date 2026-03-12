@@ -120,8 +120,7 @@ public class APU {
     // CPU Register Writes
     // -------------------------
     public void writeRegister(int addr, int data) {
-        System.out.println("APU writeRegister: 0x" + Integer.toHexString(addr) 
-        + " = 0x" + Integer.toHexString(data));
+
         switch (addr) {
             // Pulse 1
             case 0x4000 -> pulse1.writeControl(data);
