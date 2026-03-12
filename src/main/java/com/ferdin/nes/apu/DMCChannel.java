@@ -180,6 +180,10 @@ public class DMCChannel {
         }
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
     // -------------------------
     // Sample output
     // -------------------------

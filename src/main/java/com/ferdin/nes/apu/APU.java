@@ -15,7 +15,7 @@ public class APU {
     // -------------------------
     private int  frameCounterMode = 0; // 0 = 4-step, 1 = 5-step
     private boolean irqInhibit    = false;
-    private int  frameCounter     = 0;
+    //private int  frameCounter     = 0;
     private int  cycles           = 0;
 
     // -------------------------
@@ -27,7 +27,7 @@ public class APU {
     // Audio output
     // -------------------------
     private AudioOutput audioOutput;
-    private int totalCycles = 0;
+    //private int totalCycles = 0;
 
     public APU() {
         //audioOutput = new AudioOutput();
@@ -40,7 +40,7 @@ public class APU {
     // Called every CPU cycle
     public void tick() {
         cycles++;
-        totalCycles++;
+        //totalCycles++;
 
         // APU ticks every 2 CPU cycles
         if (cycles % 2 == 0) {
