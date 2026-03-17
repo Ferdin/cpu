@@ -198,10 +198,6 @@ public class Bus implements Mem {
         addr &= 0xFFFF;
         data &= 0xFF;
 
-        if (addr >= 0x4000 && addr <= 0x4017) {
-            System.out.println("memWrite $" + Integer.toHexString(addr) 
-                + " = $" + Integer.toHexString(data));
-        }
         if (addr >= RAM && addr <= RAM_MIRRORS_END) {
             int mirrorDownAddr = addr & 0b00000111_11111111;
             cpuVram[mirrorDownAddr] = (byte) data;
