@@ -72,11 +72,6 @@ public class Emulator {
         keyMap.put(GLFW.GLFW_KEY_A,     Joypad.BUTTON_A);
         keyMap.put(GLFW.GLFW_KEY_S,     Joypad.BUTTON_B);
 
-        keyMap.put(GLFW.GLFW_KEY_W,      Joypad.UP);
-        keyMap.put(GLFW.GLFW_KEY_D,      Joypad.RIGHT);
-        keyMap.put(GLFW.GLFW_KEY_X,      Joypad.DOWN);
-        keyMap.put(GLFW.GLFW_KEY_Z,      Joypad.LEFT);
-
         // Bus — callback only writes pixels
         Bus bus = new Bus(rom, (ppu, joypad) -> {
             Renderer.render(ppu, frame);
