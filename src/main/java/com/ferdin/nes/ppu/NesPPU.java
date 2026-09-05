@@ -86,6 +86,14 @@ public class NesPPU implements PPU {
         addr.increment(ctrl.vramAddrIncrement());
     }
 
+    private int paletteIndex(int address) {
+        int index = (address - 0x3F00) & 0x1F;
+        if (index == 0x10 || index == 0x14 || index == 0x18 || index == 0x1C) {
+            index -= 0x10;
+        }
+        return index;
+    }
+
     // -----------------------------------------------------------------------
     // PPU interface implementation
     // -----------------------------------------------------------------------
@@ -144,8 +152,6 @@ public class NesPPU implements PPU {
         int address = addr.get();
 
         if (address <= 0x1fff) {
-            System.out.println("attempt to write to chr rom space " + address);
-
         } else if (address <= 0x2fff) {
             vram[mirrorVramAddr(address)] = value & 0xFF;
 
@@ -153,13 +159,8 @@ public class NesPPU implements PPU {
             throw new UnsupportedOperationException(
                 "addr " + address + " shouldn't be used in reality");
 
-        } else if (address == 0x3f10 || address == 0x3f14
-                || address == 0x3f18 || address == 0x3f1c) {
-            int mirrorAddr = address - 0x10;
-            paletteTable[mirrorAddr - 0x3f00] = value & 0xFF;
-
         } else if (address <= 0x3fff) {
-            paletteTable[address - 0x3f00] = value & 0xFF;
+            paletteTable[paletteIndex(address)] = value & 0xFF;
 
         } else {
             throw new IllegalStateException(
@@ -188,13 +189,8 @@ public class NesPPU implements PPU {
             throw new UnsupportedOperationException(
                 "addr " + address + " shouldn't be used in reality");
 
-        } else if (address == 0x3f10 || address == 0x3f14
-                || address == 0x3f18 || address == 0x3f1c) {
-            int mirrorAddr = address - 0x10;
-            return paletteTable[mirrorAddr - 0x3f00] & 0xFF;
-
         } else if (address <= 0x3fff) {
-            return paletteTable[address - 0x3f00] & 0xFF;
+            return paletteTable[paletteIndex(address)] & 0xFF;
 
         } else {
             throw new IllegalStateException(

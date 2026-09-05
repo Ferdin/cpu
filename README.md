@@ -14,6 +14,18 @@ Learn:
 ✅ Run Emulation tests with the roms available in the link below:
 https://www.nesdev.org/wiki/Emulator_tests (will do more as I progress)
 
+### Headless Blargg PPU tests
+
+Place the Blargg PPU `.nes` files in a directory and run the headless runner:
+
+```text
+main.java.com.ferdin.nes.testing.BlargPpuRunner <path-to-blarg-ppu-directory>
+```
+
+The JUnit suite discovers the same directory when `-Dblarg.ppu.dir=<path>` or
+`BLARG_PPU_DIR` is set. Each ROM is run without GLFW, OpenGL, audio, or a
+renderer and reports the standard Blargg result at `$6000`.
+
 ## The PPU (Graphics)✅
 
 Time: Many hours!✅ <br/>

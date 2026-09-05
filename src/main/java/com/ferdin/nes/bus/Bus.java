@@ -41,6 +41,8 @@ public class Bus implements Mem {
 
     private static final int RAM = 0x0000;
     private static final int RAM_MIRRORS_END = 0x1FFF;
+    private static final int SRAM = 0x6000;
+    private static final int SRAM_END = 0x7FFF;
     //private static final int PPU_REGISTERS = 0x2000;
     private static final int PPU_REGISTERS_MIRRORS_END = 0x3FFF;
 
@@ -48,6 +50,7 @@ public class Bus implements Mem {
     private Rom rom;
     private NesPPU ppu;
     private byte[] cpuVram;
+    private byte[] sram;
     private int[]  prgRom;
     private int cycles;
     private BiConsumer<NesPPU, Joypad> gameloopCallback;
@@ -57,6 +60,7 @@ public class Bus implements Mem {
     public Bus() {
         this.rom = null;
         this.cpuVram = new byte[2048];
+        this.sram = new byte[8192];
         this.cycles = 0;
         this.apu = new APU();
     }
@@ -75,6 +79,7 @@ public class Bus implements Mem {
 
         this.rom = rom;
         this.cpuVram = new byte[2048];
+        this.sram = new byte[8192];
         this.cycles = 0;
         this.ppu    = new NesPPU(chrRom, rom.screenMirroring);
         this.apu = new APU();
@@ -95,6 +100,7 @@ public class Bus implements Mem {
 
         this.rom = rom;
         this.cpuVram = new byte[2048];
+        this.sram = new byte[8192];
         this.cycles = 0;
         this.ppu    = new NesPPU(chrRom, rom.screenMirroring);
         this.gameloopCallback = callback;
@@ -158,6 +164,9 @@ public class Bus implements Mem {
             int mirrorDownAddr = addr & 0b00000111_11111111;
             return cpuVram[mirrorDownAddr] & 0xFF;
 
+        } else if (addr >= SRAM && addr <= SRAM_END) {
+            return sram[addr - SRAM] & 0xFF;
+
         } else if (addr == 0x2000 || addr == 0x2001 || addr == 0x2003
                 || addr == 0x2005 || addr == 0x2006 || addr == 0x4014) {
             throw new UnsupportedOperationException(
@@ -201,6 +210,9 @@ public class Bus implements Mem {
         if (addr >= RAM && addr <= RAM_MIRRORS_END) {
             int mirrorDownAddr = addr & 0b00000111_11111111;
             cpuVram[mirrorDownAddr] = (byte) data;
+
+        } else if (addr >= SRAM && addr <= SRAM_END) {
+            sram[addr - SRAM] = (byte) data;
 
         } else if (addr == 0x2000) {
             ppu.writeToCtrl(data);
